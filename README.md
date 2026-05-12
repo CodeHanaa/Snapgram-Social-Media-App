@@ -89,8 +89,8 @@ src/
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/your-username/snapgram.git
-cd snapgram
+git clone https://github.com/CodeHanaa/Snapgram-Social-Media-App.git
+cd Snapgram-Social-Media-App
 ```
 
 ### 2. Install Dependencies
