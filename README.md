@@ -1,4 +1,3 @@
-=======
 # Snapgram-Social-Media-App
 
 A modern full-stack social media application inspired by Instagram, built with **React, Appwrite, and Tailwind CSS**.
