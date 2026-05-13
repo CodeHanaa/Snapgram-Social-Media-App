@@ -1,13 +1,14 @@
-import './globals.css';
+import { Routes, Route } from "react-router-dom";
 
-const App = () => {
-  return ( 
-    <>
-      <h1 className="text-3xl font-bold underline text-center mt-10 text-gray-800 dark:text-gray-200">
-        Hello world!
-      </h1>
-    </>
-   );
-}
- 
+const App = () => (
+  <main className="flex flex-col h-screen">
+    <Routes>
+      {/* public routes */}
+      <Route path="/sign-in" element={<SigninForm />} />
+      {/* private routes */}
+      <Route index element={<Home />} />
+    </Routes>
+  </main>
+);
+
 export default App;
