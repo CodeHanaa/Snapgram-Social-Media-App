@@ -185,4 +185,3 @@ http://localhost:5173
 Frontend Developer: **[Hanaa Nagy]**
 
 Focused on building scalable, high-performance web applications using modern frontend technologies.
-
