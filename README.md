@@ -1,187 +1,73 @@
-# Snapgram-Social-Media-App
+# React + TypeScript + Vite
 
-A modern full-stack social media application inspired by Instagram, built with **React, Appwrite, and Tailwind CSS**.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Snapgram delivers a fast, responsive, and production-like experience using modern frontend architecture including caching, infinite scrolling, and modular design patterns.
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## 🚀 Live Demo
+## React Compiler
 
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```
-تحت  الانشاء
-```
+## Expanding the ESLint configuration
 
----
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-## 📌 About The Project
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-Snapgram is a social media platform that allows users to:
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-* Create account and authenticate securely
-* Create, edit, delete posts
-* Like and save posts
-* Upload images and media files
-* Explore posts with infinite scrolling
-* Search for users and content
-* View user profiles with activity overview
-
-The project simulates real-world production apps using **React + Appwrite (BaaS)**.
-
----
-
-## ✨ Features
-
-* 🔐 Authentication (Sign up / Login / Logout)
-* 📝 Post CRUD (Create, Edit, Delete)
-* ❤️ Like & Save system
-* 🔍 Debounced search functionality
-* ♾️ Infinite scrolling feed
-* 📤 Image upload system
-* 👤 User profiles
-* ⚡ React Query caching & optimization
-* 📱 Fully responsive design
-
----
-
-## 🛠️ Tech Stack
-
-### Frontend
-
-* React.js
-* TypeScript
-* Tailwind CSS
-
-### State & Data
-
-* TanStack Query (React Query)
-
-### Backend (BaaS)
-
-* Appwrite (Auth, Database, Storage)
-
-### Libraries
-
-* React Router DOM
-* React Dropzone
-* Lucide Icons
-
----
-
-## 📁 Project Structure
-
-```
-src/
- ├── components/   # Reusable UI components
- ├── pages/        # App pages (Home, Profile, Explore)
- ├── hooks/        # Custom hooks
- ├── lib/          # Appwrite config & API
- ├── context/      # Global state (if used)
- ├── styles/       # Global styles
- └── utils/        # Helper functions
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
----
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-## ⚙️ Installation & Setup
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-### 1. Clone Repository
-
-```bash
-git clone https://github.com/CodeHanaa/Snapgram-Social-Media-App.git
-cd Snapgram-Social-Media-App
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
-### 3. Install Required Packages
-
-```bash
-npm install @tanstack/react-query react-router-dom lucide-react appwrite react-dropzone react-intersection-observer
-```
-
-### 4. Environment Variables
-
-Create `.env.local` file:
-
-```env
-VITE_APPWRITE_URL=your_appwrite_url
-VITE_APPWRITE_PROJECT_ID=your_project_id
-VITE_APPWRITE_DATABASE_ID=your_database_id
-VITE_APPWRITE_STORAGE_ID=your_storage_id
-VITE_APPWRITE_USER_COLLECTION_ID=your_user_collection_id
-VITE_APPWRITE_POST_COLLECTION_ID=your_post_collection_id
-VITE_APPWRITE_SAVES_COLLECTION_ID=your_saves_collection_id
-```
-
----
-
-## ▶️ Run the Project
-
-```bash
-npm run dev
-```
-
-ثم افتح:
-
-```
-http://localhost:5173
-```
-
----
-
-## 🧠 Key Concepts Implemented
-
-### 🔄 React Query Optimization
-
-* Caching API requests
-* Background refetching
-* Performance optimization
-
-### ♾️ Infinite Scroll
-
-* Implemented using Intersection Observer
-
-### 🔐 Appwrite Integration
-
-* Authentication
-* Database
-* File storage
-
-### 🔍 Debounced Search
-
-* Reduces API calls
-* Improves performance
-
----
-
-## 🚧 Challenges Faced
-
-* Managing global state across components
-* Optimizing API performance
-* Handling file uploads properly
-* Structuring scalable frontend architecture
-
----
-
-## 📈 Future Improvements
-
-* 🌙 Dark mode
-* 💬 Comments system
-* 🔔 Notifications
-* 📊 Analytics dashboard
-* 🧑‍🤝‍🧑 Follow/Unfollow system
-* ⚡ Skeleton loading & better UX
-
----
-
-## 👩‍💻 Author
-
-Frontend Developer: **[Hanaa Nagy]**
-
-Focused on building scalable, high-performance web applications using modern frontend technologies.
