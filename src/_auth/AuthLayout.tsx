@@ -12,9 +12,9 @@ const AuthLayout = () => {
            </section> 
 
            <img
-            src="public/assets/images/side-img.svg"
+            src="/assets/images/side-img.svg"
             alt="Background"
-            className="absolute inset-0 w-full h-full object-cover opacity-50 -z-10"
+            className="hidden xl:block h-screen w-1/2 object-cover bg-no-repeat"
            />
            </>
         )
