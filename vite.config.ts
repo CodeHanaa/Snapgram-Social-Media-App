@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"), // 👈 2. عرّفي علامة الـ @ هنا
+      "@": path.resolve(__dirname, "./src"), 
     },
   },
 })
