@@ -1,24 +1,20 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { useForm } from "react-hook-form";
+import { Link } from "react-router-dom";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: "Too short" }),
-  username: z.string().min(2, { message: "Too short" }),
-  email: z.string().email({ message: "Invalid email" }),
-  password: z.string().min(6, { message: "Must be at least 6 characters" }),
-});
+import * as z from "zod";
+import { signupSchema } from "@/lib/Validation";
 
 const SignupForm = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
     defaultValues: { name: "", username: "", email: "", password: "" },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
+  const onSubmit = (values: z.infer<typeof signupSchema>) => {
     console.log(values);
   };
 
@@ -66,9 +62,12 @@ const SignupForm = () => {
       
           <p className="text-small-regular text-light-2 text-center mt-2">
             Already have an account?{" "}
-            <a href="/sign-in" className="text-primary-500 text-small-semibold ml-1">
+            <Link 
+              to="/sign-in" 
+              className="text-primary-500 text-small-semibold ml-1 hover:underline underline-offset-4 transition-all"
+            >
               Log in
-            </a>
+            </Link>
           </p>
         </form>
       </Form>
