@@ -8,9 +8,9 @@ const AuthLayout = () => {
       {isAuthenticated ? (
         <Navigate to="/" />
       ) : (
-        <div className="flex h-screen w-full">
+        <div className="flex h-screen w-full bg-black">
           {/* الفورم على الشمال */}
-          <section className="flex flex-1 justify-center items-center flex-col py-10 bg-black">
+          <section className="flex flex-1 justify-center items-center flex-col py-10 ">
             <Outlet />
           </section>
 
