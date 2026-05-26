@@ -7,6 +7,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { signupSchema } from "@/lib/Validation";
+import { createUserAccount } from "@/lib/Appwrite/Api";
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -16,13 +17,41 @@ const SignupForm = () => {
   });
 
    const onSubmit = async (values: z.infer<typeof signupSchema>) => {
-    // هنا بيتم ربط الـ API الخاص بيكي
-    // const newUser = await createNewUser(values); // افترضي أن createNewUser هي دالة بتتعامل مع الـ API لإنشاء مستخدم جديد 
-    console.log(values);
-    
-    toast.success("Account created successfully!");
-    navigate("/sign-in");
-  };
+    try {
+      // 1. محاولة إنشاء الحساب
+      const newUser = await createUserAccount(values); 
+
+      // 2. التحقق من النتيجة (في حال رجع newUser بقيمة فارغة أو undefined)
+      if (!newUser) {
+        toast.error("Sign up failed. Please try again.");
+        return; // وقف تنفيذ الكود هنا عشان منعملش navigate لصفحة الـ sign-in
+      }
+
+      // 3. النجاح
+      console.log("New user created:", newUser);
+      toast.success("Account created successfully!");
+      
+      // 4. إعادة تعيين الفورم (اختياري بس مفضل عشان ميبقاش فيه بيانات قديمة)
+      form.reset(); 
+      
+      navigate("/sign-in");
+
+    }  catch (error: unknown) {
+    console.error("Signup error:", error);
+
+    // التحقق من أن الخطأ هو كائن يحتوي على كود
+    if (error instanceof Error && 'code' in error) {
+      const err = error as { code: number };
+      if (err.code === 409) {
+        toast.error("This email is already in use.");
+      } else {
+        toast.error("Something went wrong.");
+      }
+    } else {
+      toast.error("An unexpected error occurred.");
+    }
+  }
+};
 
   return (
     <div className="flex flex-col justify-center items-center w-full max-w-[420px] text-white">
