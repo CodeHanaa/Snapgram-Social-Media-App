@@ -15,8 +15,9 @@ const SignupForm = () => {
     defaultValues: { name: "", username: "", email: "", password: "" },
   });
 
-  const onSubmit = async (values: z.infer<typeof signupSchema>) => {
+   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
     // هنا بيتم ربط الـ API الخاص بيكي
+    // const newUser = await createNewUser(values); // افترضي أن createNewUser هي دالة بتتعامل مع الـ API لإنشاء مستخدم جديد 
     console.log(values);
     
     toast.success("Account created successfully!");
