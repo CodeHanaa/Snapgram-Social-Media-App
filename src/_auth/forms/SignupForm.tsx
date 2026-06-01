@@ -27,6 +27,8 @@ const SignupForm = () => {
         return; // وقف تنفيذ الكود هنا عشان منعملش navigate لصفحة الـ sign-in
       }
 
+      
+
       // 3. النجاح
       console.log("New user created:", newUser);
       toast.success("Account created successfully!");
