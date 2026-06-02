@@ -1,18 +1,49 @@
+// ===== NAV =====
 export type INavLink = {
   imgURL: string;
   route: string;
   label: string;
 };
 
+// ===== USER (Database Profile) =====
+export type IUser = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  imageUrl: string;
+  bio?: string;
+};
+
+// ===== NEW USER (DB ONLY - NO PASSWORD) =====
+export type INewUser = {
+  accountId: string;
+  name: string;
+  email: string;
+  username: string;
+  bio?: string;
+  imageUrl?: string;
+};
+
+// ===== AUTH USER (FOR SIGNUP ONLY) =====
+export type ISignUpUser = {
+  name: string;
+  email: string;
+  password: string;
+  username: string;
+};
+
+// ===== UPDATE USER =====
 export type IUpdateUser = {
   userId: string;
   name: string;
-  bio: string;
+  bio?: string;
   imageId: string;
   imageUrl: string;
   file: File[];
 };
 
+// ===== POST =====
 export type INewPost = {
   userId: string;
   caption: string;
@@ -29,21 +60,5 @@ export type IUpdatePost = {
   file: File[];
   location?: string;
   tags?: string;
-};
-
-export type IUser = {
-  id: string;
-  name: string;
-  username: string;
-  email: string;
-  imageUrl: string;
-  bio: string;
-};
-
-export type INewUser = {
-  name: string;
-  email: string;
-  username: string;
-  password: string;
-  bio?: string;
+  username?: string; 
 };
