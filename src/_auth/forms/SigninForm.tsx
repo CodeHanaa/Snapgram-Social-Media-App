@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom"; // إضافة useLocation
 import { toast } from "sonner";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,18 @@ import { signinSchema } from "@/lib/Validation";
 
 const SigninForm = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // استقبال الـ state
+
+  // جلب القيم من الـ state إذا كانت موجودة
+  const prefilledEmail = location.state?.email || "";
+  const prefilledPassword = location.state?.password || "";
+
   const form = useForm<z.infer<typeof signinSchema>>({
     resolver: zodResolver(signinSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { 
+      email: prefilledEmail, 
+      password: prefilledPassword 
+    },
   });
 
   const onSubmit = async (values: z.infer<typeof signinSchema>) => {
@@ -23,7 +32,7 @@ const SigninForm = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full max-w-[420px] text-white">
+    <div className="flex flex-col justify-center items-center w-full max-w-105 text-white">
       <img src="/assets/images/logo.svg" alt="logo" className="h-12 mb-5" />
       <h2 className="text-3xl font-bold pt-5">Log in to your account</h2>
       <p className="text-gray-400 mt-2">Welcome back! Please enter your details</p>

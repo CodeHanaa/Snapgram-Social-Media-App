@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 1. إضافة الاستيراد
 import { type IUser } from "@/Types";
 import { INITIAL_USER } from "@/Context";
 import { getCurrentUser } from "@/lib/Appwrite/Api";
 import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const navigate = useNavigate(); // 2. تعريف الـ hook
     const [user, setUser] = useState<IUser>(INITIAL_USER);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,15 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const initializeAuth = async () => {
             const cookieFallback = localStorage.getItem("cookieFallback");
-            if (cookieFallback === "[]" || cookieFallback === null) {
-                setIsLoading(false);
-                return;
+            
+            if (cookieFallback === "[]" || cookieFallback === null || cookieFallback === undefined) {
+                navigate("/sign-in");
+                setIsLoading(false); // مهم جداً: إيقاف الـ loading إذا تم التحويل
+            } else {
+                const isAuth = await checkAuthUser();
+                if (!isAuth) navigate("/sign-in");
             }
-            await checkAuthUser();
         };
-        initializeAuth();
-    }, []);
 
+        initializeAuth();
+    }, [navigate]); 
+    
     const value = {
         user,
         setUser,

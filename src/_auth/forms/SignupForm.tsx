@@ -68,7 +68,9 @@ const SignupForm = () => {
 
     toast.success("Welcome to Snapgram! Account created successfully.");
     form.reset();
-    navigate("/sign-in");
+    navigate("/sign-in", { 
+      state: { email: values.email, password: values.password } 
+    });
   } catch (error: unknown) {
     const err = error as AppwriteException;
     console.error("Signup error details:", err);
@@ -82,7 +84,7 @@ const SignupForm = () => {
 };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full max-w-[420px] text-white">
+    <div className="flex flex-col justify-center items-center w-full max-w-105 text-white">
       <img src="/assets/images/logo.svg" alt="logo" className="h-12 mb-5" />
       <h2 className="text-3xl font-bold pt-5">Create a new account</h2>
       <p className="text-gray-400 mt-2">To use snapgram, please enter your details</p>
