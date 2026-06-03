@@ -1,7 +1,6 @@
-import { ID } from "appwrite";
+import { ID, Query } from "appwrite"; // أضفنا Query هنا
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import type { INewUser } from "@/Types";
-
 
 // 🔵 SIGN UP (AUTH ONLY)
 export async function signUpAccount(user: {
@@ -25,11 +24,9 @@ export async function signUpAccount(user: {
   }
 }
 
-
 // 🟢 CREATE USER (DATABASE PROFILE ONLY)
 export async function createUserAccount(user: INewUser) {
   try {
-    // نولد رابط الصورة الافتراضي فوراً إذا كان الرابط فارغاً
     const profileImageUrl = 
       user.imageUrl && user.imageUrl.startsWith('http') 
         ? user.imageUrl 
@@ -41,7 +38,7 @@ export async function createUserAccount(user: INewUser) {
       email: user.email,
       username: user.username,
       bio: user.bio || "",
-      imageUrl: profileImageUrl, // إرسال الرابط الصالح دائماً
+      imageUrl: profileImageUrl,
     });
 
     return newUser;
@@ -50,7 +47,6 @@ export async function createUserAccount(user: INewUser) {
     throw error;
   }
 }
-
 
 // 💾 SAVE USER TO DATABASE
 export async function saveUserToDatabase(user: {
@@ -84,7 +80,6 @@ export async function saveUserToDatabase(user: {
   }
 }
 
-
 // 🔵 SIGN IN
 export async function signInAccount(user: {
   email: string;
@@ -100,5 +95,29 @@ export async function signInAccount(user: {
   } catch (error) {
     console.error("SignIn Error:", error);
     throw error;
+  }
+}
+
+// 🔍 GET CURRENT USER
+export async function getCurrentUser() {
+  try {
+    // 1. نجلب بيانات الحساب الحالي من الـ Auth
+    const currentAccount = await appwriteService.account.get();
+
+    if (!currentAccount) throw Error;
+
+    // 2. نجلب بيانات المستخدم من الداتابيز باستخدام الـ accountId
+    const currentUser = await appwriteService.databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.userCollectionId,
+      [Query.equal("accountId", currentAccount.$id)]
+    );
+
+    if (!currentUser) throw Error;
+
+    return currentUser.documents[0];
+  } catch (error) {
+    console.error("GetCurrentUser Error:", error);
+    return null;
   }
 }
