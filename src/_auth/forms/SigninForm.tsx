@@ -31,28 +31,34 @@ const SigninForm = () => {
   }, [location]);
 
   const onSubmit = async (values: z.infer<typeof signinSchema>) => {
-    try {
-      const session = await signInAccount({
-        email: values.email,
-        password: values.password,
-      });
+  // التحقق من وجود جلسة سابقة لتجنب خطأ Session is active
+  if (localStorage.getItem("cookieFallback") && localStorage.getItem("cookieFallback") !== "[]") {
+    navigate("/");
+    return;
+  }
 
-      if (!session) throw new Error("Failed to create session");
+  try {
+    const session = await signInAccount({
+      email: values.email,
+      password: values.password,
+    });
 
-      const isLoggedIn = await checkAuthUser();
+    if (!session) throw new Error("Failed to create session");
 
-      if (isLoggedIn) {
-        form.reset();
-        toast.success("Welcome back!");
-        navigate("/");
-      } else {
-        toast.error("Auth check failed. Please log in again.");
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("An error occurred. Please try again.");
+    const isLoggedIn = await checkAuthUser();
+
+    if (isLoggedIn) {
+      form.reset();
+      toast.success("Welcome back!");
+      navigate("/");
+    } else {
+      toast.error("Auth check failed. Please log in again.");
     }
-  };
+  } catch (error) {
+    console.error(error);
+    toast.error("An error occurred. Please try again.");
+  }
+};
 
   return (
     <div className="flex flex-col justify-center items-center w-full max-w-105 text-white">
