@@ -1,4 +1,4 @@
-import { ID, Query } from "appwrite"; // أضفنا Query هنا
+import { ID, Query } from "appwrite"; 
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import type { INewUser } from "@/Types";
 
@@ -119,5 +119,15 @@ export async function getCurrentUser() {
   } catch (error) {
     console.error("GetCurrentUser Error:", error);
     return null;
+  }
+}
+
+// 🔵 SIGN OUT
+export async function signOutAccount() {
+  try {
+    await appwriteService.account.deleteSession("current");
+  } catch (error) {
+    console.error("SignOut Error:", error);
+    throw error;
   }
 }

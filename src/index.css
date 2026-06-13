@@ -1,12 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght=400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
-@custom-variant dark (&:is(.dark *));
-
-/* --- إعدادات الثيم والألوان المخصصة لـ Snapgram --- */
+/* --- تعريف الثيم والألوان الأساسية --- */
 @theme {
   --font-inter: "Inter", sans-serif;
 
@@ -25,7 +20,7 @@
   --color-red: #ff5a5a;
 }
 
-/* --- الإعدادات الأساسية (Reset & Base) --- */
+/* --- الإعدادات الأساسية --- */
 @layer base {
   * {
     box-sizing: border-box;
@@ -33,7 +28,6 @@
     margin: 0;
     padding: 0;
     scroll-behavior: smooth;
-    @apply border-border outline-ring/50;
   }
 
   body {
@@ -41,174 +35,72 @@
     color: var(--color-light-1);
     min-height: 100vh;
     font-family: var(--font-inter);
-    @apply bg-background text-foreground;
-  }
-  html {
-    @apply font-sans;
   }
 }
 
-/* --- تخصيص السكرول بار بكود CSS صريح (عشان الـ Compiler ميزعلش) --- */
+/* --- تخصيص السكرول بار --- */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #09090a; /* تعادل ديرك 2 */
+  background: var(--color-dark-2);
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #5c5c7b; /* تعادل لايت 4 */
+  background: var(--color-light-4);
   border-radius: 50px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #7878a3; /* تعادل لايت 3 */
+  background: var(--color-light-3);
 }
 
-/* --- المكونات المخصصة والـ Layouts (Custom Utilities) --- */
-@layer utilities {
-  .flex-center { @apply flex justify-center items-center; }
-  .flex-between { @apply flex justify-between items-center; }
-  .flex-start { @apply flex justify-start items-center; }
-
-  /* الحاويات الأساسية لصفحات التطبيق (شلنا منها الـ apply للـ custom-scrollbar وضفناها كـ class عادي) */
-  .common-container {
-    @apply flex flex-col flex-1 items-center gap-10 overflow-y-auto py-10 px-5 md:px-8 lg:p-14;
-  }
-
-  .user-container { @apply max-w-5xl flex flex-col items-start w-full gap-6 md:gap-9; }
-  .explore-container { @apply flex flex-col flex-1 items-center overflow-y-auto py-10 px-5 md:p-14; }
-  .home-container { @apply flex flex-col flex-1 items-center gap-10 overflow-y-auto py-10 px-5 md:px-8 lg:p-14; }
-  .profile-container { @apply flex flex-col items-center flex-1 gap-10 overflow-y-auto py-10 px-5 md:p-14; }
-  .saved-container { @apply flex flex-col flex-1 items-center gap-10 overflow-y-auto py-10 px-5 md:p-14; }
-}
-
-/* --- Shadcn UI Overrides & Form Elements --- */
+/* --- المكونات والـ Layouts --- */
 @layer components {
-  .shad-input {
-    @apply h-12 bg-dark-4 border-none text-light-1 placeholder:text-light-4 focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
+  .leftsidebar {
+    @apply hidden md:flex px-6 py-10 flex-col justify-between min-w-[270px] h-screen sticky top-0 left-0;
+    background-color: var(--color-dark-2);
   }
 
-  .shad-textarea {
-    @apply h-36 bg-dark-3 rounded-xl border-none text-light-1 focus-visible:ring-1 focus-visible:ring-offset-1 ring-offset-light-3;
+  .leftsidebar-link {
+    @apply rounded-lg text-[16px] font-medium leading-[140%] transition;
+    color: var(--color-light-1);
   }
 
-  .shad-button_primary {
-    @apply bg-primary-500 hover:bg-primary-600 text-light-1 flex gap-2 items-center justify-center transition-all;
+  .leftsidebar-link:hover {
+    background-color: var(--color-primary-500);
   }
 
-  .shad-button_dark_4 {
-    @apply h-12 bg-dark-4 px-5 text-light-1 flex gap-2 items-center justify-center transition-all;
+  .shad-button_ghost {
+    @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white;
   }
 }
 
-@theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --color-foreground: var(--foreground);
-  --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
+/* --- Utilities --- */
+@layer utilities {
+  .flex-center {
+    @apply flex justify-center items-center;
+  }
 
-:root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  .flex-between {
+    @apply flex justify-between items-center;
+  }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  .flex-start {
+    @apply flex justify-start items-center;
+  }
+
+  .base-medium {
+    @apply text-[16px] font-medium leading-[140%];
+  }
+
+  .body-bold {
+    @apply text-[18px] font-bold leading-[140%];
+  }
+
+  .small-regular {
+    @apply text-[14px] font-normal leading-[140%];
+  }
 }
