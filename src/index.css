@@ -1,7 +1,9 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 @import "tailwindcss";
 
-/* --- تعريف الثيم والألوان الأساسية --- */
+/* =======================
+   THEME
+======================= */
 @theme {
   --font-inter: "Inter", sans-serif;
 
@@ -20,7 +22,9 @@
   --color-red: #ff5a5a;
 }
 
-/* --- الإعدادات الأساسية --- */
+/* =======================
+   BASE
+======================= */
 @layer base {
   * {
     box-sizing: border-box;
@@ -38,7 +42,9 @@
   }
 }
 
-/* --- تخصيص السكرول بار --- */
+/* =======================
+   SCROLLBAR
+======================= */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -57,20 +63,27 @@
   background: var(--color-light-3);
 }
 
-/* --- المكونات والـ Layouts --- */
+/* =======================
+   COMPONENTS
+======================= */
 @layer components {
   .leftsidebar {
-    @apply hidden md:flex px-6 py-10 flex-col justify-between min-w-[270px] h-screen sticky top-0 left-0;
-    background-color: var(--color-dark-2);
+    @apply hidden md:flex px-6 py-8 flex-col justify-start gap-10 min-w-[270px] bg-dark-2 sticky top-0 h-screen;
   }
 
   .leftsidebar-link {
-    @apply rounded-lg text-[16px] font-medium leading-[140%] transition;
-    color: var(--color-light-1);
+    @apply flex gap-4 items-center p-4 rounded-lg
+           text-[16px] font-medium leading-[140%]
+           transition-all duration-200
+           text-light-1;
   }
 
   .leftsidebar-link:hover {
-    background-color: var(--color-primary-500);
+    @apply bg-primary-500 text-white;
+  }
+
+  .leftsidebar-link.active {
+    @apply bg-primary-500 text-white;
   }
 
   .shad-button_ghost {
@@ -78,7 +91,9 @@
   }
 }
 
-/* --- Utilities --- */
+/* =======================
+   UTILITIES
+======================= */
 @layer utilities {
   .flex-center {
     @apply flex justify-center items-center;
@@ -102,5 +117,13 @@
 
   .small-regular {
     @apply text-[14px] font-normal leading-[140%];
+  }
+
+  .small-medium {
+    @apply text-[14px] font-medium leading-[140%];
+  }
+
+  .invert-white {
+    filter: brightness(0) invert(1);
   }
 }
