@@ -2,13 +2,11 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { toast } from "sonner"; // تأكدي من تثبيت sonner أو استخدمي مكتبة التنبيهات الخاصة بكِ
 import FileUploader from "../shared/FileUploader";
 import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 import { useUserContext } from "@/Context/useAuthContext";
 import type { IPost } from "@/Types";
 
-// Schema محدثة لتكون الـ file اختيارية في التعديل
 const PostSchema = z.object({
   caption: z.string().min(5, { message: "Minimum 5 characters." }),
   file: z.custom<File[]>().optional(),
@@ -25,7 +23,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { user } = useUserContext();
   
-  // Hooks
   const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePost();
   const { mutateAsync: updatePost, isPending: isLoadingUpdate } = useUpdatePost();
 
@@ -39,43 +36,29 @@ const PostForm = ({ post, action }: PostFormProps) => {
     },
   });
 
-const onSubmit = async (values: z.infer<typeof PostSchema>) => {
-    console.log("Submit clicked! Action:", action); // 1. التأكد أن الزر يعمل
-    
-    // 2. إذا كان تعديل
-    if (action === 'Update' && post) {
-      console.log("Starting Update with values:", values);
-      
-      try {
-        const updatedPost = await updatePost({
-          ...values,
-          postId: post.$id,
-          imageId: post.imageId,
-          imageUrl: post.imageUrl,
-        });
-        
-        console.log("Update success:", updatedPost);
-        if (updatedPost) {
-          navigate(`/posts/${post.$id}`);
-        }
-      } catch (error) {
-        console.error("Critical Error during update:", error); // 3. هل يظهر خطأ هنا؟
-      }
-      return;
-    }
+  const onSubmit = async (values: z.infer<typeof PostSchema>) => {
+  const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
+  
+  if (action === 'Update' && post) {
+    const updatedPost = await updatePost({
+      ...values,
+      tags: tagsArray,
+      postId: post.$id,
+      imageId: post.imageId,
+      imageUrl: post.imageUrl,
+      file: values.file || [],
+    });
+    if (updatedPost) navigate(`/posts/${post.$id}`);
+    return;
+  }
 
-    // 3. إذا كان إنشاء
-    console.log("Starting Create...");
-    try {
-      const newPost = await createPost({
-        ...values,
-        userId: user.$id,
-      });
-      if (newPost) navigate("/");
-    } catch (error) {
-      console.error("Critical Error during create:", error);
-    }
-  };
+  const newPost = await createPost({
+    ...values,
+    tags: tagsArray,
+    userId: user.$id,
+  });
+  if (newPost) navigate("/");
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-9 w-full max-w-5xl">

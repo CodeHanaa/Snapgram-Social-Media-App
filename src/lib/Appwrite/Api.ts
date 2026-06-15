@@ -236,22 +236,40 @@ export async function updatePost(post: {
   imageUrl: string;
   caption: string;
   location: string;
-  tags: string; // لاحظي هنا أنها تصل String من الـ Form
+  tags: string[];
+  file: File[];
 }) {
   try {
+    let newImageUrl = post.imageUrl;
+    let newImageId = post.imageId;
+
+    if (post.file.length > 0) {
+      const uploadedFile = await appwriteService.storage.createFile(
+        appwriteConfig.storageId,
+        ID.unique(),
+        post.file[0]
+      );
+      newImageUrl = appwriteService.storage.getFileView(
+        appwriteConfig.storageId,
+        uploadedFile.$id
+      ).toString();
+      newImageId = uploadedFile.$id;
+      
+      await appwriteService.storage.deleteFile(appwriteConfig.storageId, post.imageId);
+    }
+
     const updatedPost = await appwriteService.databases.updateDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       post.postId,
       {
         caption: post.caption,
-        imageUrl: post.imageUrl,
-        imageId: post.imageId,
+        imageUrl: newImageUrl,
+        imageId: newImageId,
         location: post.location,
-        tags: post.tags.replace(/ /g, "").split(","), // نحول الـ String إلى Array هنا
+        tags: post.tags,
       }
     );
-
     return updatedPost;
   } catch (error) {
     console.error("Error in updatePost API:", error);
