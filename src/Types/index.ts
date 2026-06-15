@@ -6,14 +6,15 @@ export type INavLink = {
 };
 
 // ===== USER (Database Profile) =====
-export type IUser = {
-  id: string;
+export interface IUser {
+  $id: string;      // أضيفي هذا السطر
+  accountId: string;
   name: string;
   username: string;
   email: string;
   imageUrl: string;
-  bio?: string;
-};
+  bio: string;
+}
 
 // ===== NEW USER (DB ONLY - NO PASSWORD) =====
 export type INewUser = {
@@ -72,3 +73,18 @@ export type IContextType = {
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
   checkAuthUser: () => Promise<boolean>;
 };
+
+export interface IPost {
+  $id: string;            // معرف البوست
+  $createdAt: string;     // تاريخ الإنشاء
+  caption: string;
+  imageUrl: string;
+  imageId: string;        // معرف الصورة في الـ Storage (ضروري للحذف)
+  location: string;
+  tags: string[];
+  creator: {
+    $id: string;          // معرف المستخدم (ضروري للـ Link)
+    name: string;
+    imageUrl: string;
+  };
+}

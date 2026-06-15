@@ -101,12 +101,10 @@ export async function signInAccount(user: {
 // 🔍 GET CURRENT USER
 export async function getCurrentUser() {
   try {
-    // 1. نجلب بيانات الحساب الحالي من الـ Auth
     const currentAccount = await appwriteService.account.get();
 
     if (!currentAccount) throw Error;
 
-    // 2. نجلب بيانات المستخدم من الداتابيز باستخدام الـ accountId
     const currentUser = await appwriteService.databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
@@ -128,6 +126,87 @@ export async function signOutAccount() {
     await appwriteService.account.deleteSession("current");
   } catch (error) {
     console.error("SignOut Error:", error);
+    throw error;
+  }
+}
+
+// 🔵 CREATE POST (تم تعديلها لضمان توافق الـ Relationship)
+export async function createPost(post: {
+  userId: string; 
+  caption: string;
+  file: File[];
+  location: string;
+  tags: string[];
+}) {
+  try {
+    const uploadedFile = await appwriteService.storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      post.file[0]
+    );
+
+    // هذا السطر يعيد نصاً (URL)، فلا تستخدمي .href
+    const fileUrl = appwriteService.storage.getFileView(
+      appwriteConfig.storageId,
+      uploadedFile.$id
+    );
+
+    const newPost = await appwriteService.databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      ID.unique(),
+      {
+        creator: post.userId, // هذا يجب أن يكون الـ $id للمستخدم في collection users
+        caption: post.caption,
+        imageUrl: fileUrl.toString(), // تأكدي من تحويله لنص
+        imageId: uploadedFile.$id,
+        location: post.location,
+        tags: post.tags,
+      }
+    );
+
+    return newPost;
+  } catch (error) {
+    console.error("Error in createPost API:", error);
+    throw error;
+  }
+}
+
+// 🔍 GET RECENT POSTS
+export async function getRecentPosts() {
+  try {
+    const posts = await appwriteService.databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      [
+        Query.orderDesc("$createdAt"), 
+        Query.limit(20)
+      ]
+    );
+
+    if (!posts) throw new Error("Failed to fetch posts");
+    
+    return posts;
+  } catch (error) {
+    console.error("Error fetching recent posts:", error);
+    throw error;
+  }
+}
+
+// 🗑️ DELETE POST
+export async function deletePost(postId: string, imageId: string) {
+  if (!postId || !imageId) throw Error;
+
+  try {
+    await appwriteService.storage.deleteFile(appwriteConfig.storageId, imageId);
+    await appwriteService.databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+    return { status: "ok" };
+  } catch (error) {
+    console.error("DeletePost Error:", error);
     throw error;
   }
 }

@@ -68,27 +68,126 @@
 ======================= */
 @layer components {
   .leftsidebar {
-    @apply hidden md:flex px-6 py-8 flex-col justify-start gap-10 min-w-[270px] bg-dark-2 sticky top-0 h-screen;
+    @apply hidden md:flex px-6 py-8 flex-col justify-start gap-10 min-w-[270px] sticky top-0 h-screen;
+    background-color: var(--color-dark-2);
   }
 
   .leftsidebar-link {
-    @apply flex gap-4 items-center p-4 rounded-lg
-           text-[16px] font-medium leading-[140%]
-           transition-all duration-200
-           text-light-1;
+    @apply flex gap-4 items-center p-4 rounded-lg transition-all duration-200;
+    color: var(--color-light-1);
   }
 
   .leftsidebar-link:hover {
-    @apply bg-primary-500 text-white;
+    background-color: var(--color-primary-500);
+    color: white;
   }
 
   .leftsidebar-link.active {
-    @apply bg-primary-500 text-white;
+    background-color: var(--color-primary-500);
+    color: white;
   }
 
   .shad-button_ghost {
     @apply flex gap-4 items-center justify-start hover:bg-transparent hover:text-white;
   }
+
+  .file_uploader-img {
+    @apply w-full h-80 lg:h-[480px] rounded-[24px] object-cover object-center;
+  }
+
+  .file_uploader-box {
+    @apply flex flex-col justify-center items-center h-[350px] w-full p-7;
+  }
+    .home-container {
+  @apply flex flex-col flex-1 items-center gap-10 py-10 px-5 md:px-8 lg:px-14;
+  }
+  
+  .home-posts {
+    @apply max-w-screen-sm flex flex-col items-center w-full gap-6 md:gap-9;
+  }
+
+  .post-card {
+    @apply rounded-3xl p-5 lg:p-7 w-full max-w-screen-sm;
+    background-color: var(--color-dark-2);
+    border: 1px solid var(--color-dark-4);
+  }
+
+  .post-card_img {
+    @apply w-full h-64 sm:h-[400px] lg:h-[450px] rounded-[24px] object-cover mb-5;
+  }
+
+  .shad-textarea {
+    @apply h-36 rounded-xl border-none focus-visible:ring-1 p-4;
+    background-color: var(--color-dark-3);
+    color: var(--color-light-1);
+  }
+
+  .shad-textarea::placeholder {
+    color: var(--color-light-4);
+  }
+
+  .shad-input {
+    @apply h-12 rounded-xl border-none focus-visible:ring-1 p-4;
+    background-color: var(--color-dark-3);
+    color: var(--color-light-1);
+  }
+
+  .shad-input::placeholder {
+    color: var(--color-light-4);
+  }
+
+  .shad-button_primary {
+    @apply text-white flex gap-2 px-5 py-2.5 rounded-lg;
+    background-color: var(--color-primary-500);
+  }
+
+  .shad-button_primary:hover {
+    background-color: var(--color-primary-600);
+  }
+
+  .shad-button_dark_4 {
+    @apply text-white px-5 py-2.5 rounded-lg;
+    background-color: var(--color-dark-4);
+  }
+
+  .shad-button_dark_4:hover {
+    background-color: var(--color-dark-4);
+  }
+
+    .common-container {
+  @apply flex flex-col flex-1 items-center gap-10 py-10 px-5 md:px-10 lg:px-20;
+  }
+
+  .create-post-container {
+  @apply flex flex-col w-full max-w-5xl gap-10;
+  }
+
+  .create-post-form {
+  @apply flex flex-col gap-8 w-full;
+  }
+
+  .form-section {
+  @apply flex flex-col gap-3 w-full;
+  }
+
+  .file_uploader-box {
+  @apply flex flex-col justify-center items-center w-full min-h-[420px] p-7 rounded-3xl;
+  background-color: var(--color-dark-2);
+  border: 1px solid var(--color-dark-4);
+  }
+
+  .shad-textarea {
+  @apply w-full min-h-[180px] rounded-xl border-none p-4;
+  background-color: var(--color-dark-3);
+  color: var(--color-light-1);
+  }
+
+  .shad-input {
+  @apply w-full h-12 rounded-xl border-none p-4;
+  background-color: var(--color-dark-3);
+  color: var(--color-light-1);
+  }
+
 }
 
 /* =======================
@@ -108,19 +207,27 @@
   }
 
   .base-medium {
-    @apply text-[16px] font-medium leading-[140%];
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 140%;
   }
 
   .body-bold {
-    @apply text-[18px] font-bold leading-[140%];
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 140%;
   }
 
   .small-regular {
-    @apply text-[14px] font-normal leading-[140%];
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 140%;
   }
 
   .small-medium {
-    @apply text-[14px] font-medium leading-[140%];
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 140%;
   }
 
   .invert-white {
