@@ -1,7 +1,7 @@
 import { type IContextType,/*type IUser */} from "@/Types";
 
 // في ملف AuthContext.tsx
-const INITIAL_USER = {
+export const INITIAL_USER = {
   $id: "", // أضيفي هذا السطر
   accountId: "",
   name: "",

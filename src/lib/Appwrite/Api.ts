@@ -184,7 +184,9 @@ export async function getRecentPosts() {
       ]
     );
 
-    if (!posts) throw new Error("Failed to fetch posts");
+    // إذا استمرت المشكلة، هذا يعني أن الـ creator لا يُجلب ككائن
+    // يمكنك إضافة هذه الخطوة للتأكد:
+    console.log("Posts fetched:", posts.documents);
     
     return posts;
   } catch (error) {
@@ -207,6 +209,52 @@ export async function deletePost(postId: string, imageId: string) {
     return { status: "ok" };
   } catch (error) {
     console.error("DeletePost Error:", error);
+    throw error;
+  }
+}
+
+export async function getPostById(postId: string) {
+  try {
+    const post = await appwriteService.databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    if (!post) throw new Error("Post not found");
+
+    return post;
+  } catch (error) {
+    console.error("Error in getPostById:", error);
+    throw error;
+  }
+}
+
+export async function updatePost(post: {
+  postId: string;
+  imageId: string;
+  imageUrl: string;
+  caption: string;
+  location: string;
+  tags: string; // لاحظي هنا أنها تصل String من الـ Form
+}) {
+  try {
+    const updatedPost = await appwriteService.databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      post.postId,
+      {
+        caption: post.caption,
+        imageUrl: post.imageUrl,
+        imageId: post.imageId,
+        location: post.location,
+        tags: post.tags.replace(/ /g, "").split(","), // نحول الـ String إلى Array هنا
+      }
+    );
+
+    return updatedPost;
+  } catch (error) {
+    console.error("Error in updatePost API:", error);
     throw error;
   }
 }

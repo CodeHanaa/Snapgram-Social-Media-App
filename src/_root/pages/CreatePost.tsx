@@ -1,6 +1,5 @@
 import PostForm from "@/components/forms/PostForm";
 
-// هنا اسم المكون بحرف كبير C
 const CreatePost = () => {
   return (
     <div className="flex flex-1">
@@ -18,10 +17,10 @@ const CreatePost = () => {
           </h2>
         </div>
 
-        <PostForm />
+        {/* هنا التعديل: أضفنا action="Create" */}
+        <PostForm action="Create" />
       </div>
-  </div>
-
+    </div>
   );
 };
 

@@ -13,7 +13,7 @@ type PostCardProps = {
 const PostCard = ({ post }: PostCardProps) => {
   const { user } = useUserContext();
   const { mutate: deletePost } = useDeletePost();
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false); // State للتحكم في ظهور الرسالة
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleDelete = () => {
     deletePost(
@@ -40,10 +40,20 @@ const PostCard = ({ post }: PostCardProps) => {
       {isConfirmOpen && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 rounded-xl">
           <div className="bg-dark-2 p-6 rounded-lg shadow-lg text-center">
-            <h3 className="text-white mb-4">هل أنت متأكد من مسح البوست؟</h3>
+            <h3 className="text-white mb-4">Are you sure you want to delete this post?</h3>
             <div className="flex gap-4 justify-center">
-              <button onClick={() => setIsConfirmOpen(false)} className="px-4 py-2 bg-gray-600 text-white rounded">لا</button>
-              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 text-white rounded">نعم</button>
+              <button 
+                onClick={() => setIsConfirmOpen(false)} 
+                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+              >
+                No
+              </button>
+              <button 
+                onClick={handleDelete} 
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Yes
+              </button>
             </div>
           </div>
         </div>
@@ -58,21 +68,36 @@ const PostCard = ({ post }: PostCardProps) => {
               alt="creator"
             />
           </Link>
+
           <div className="flex flex-col">
-            <p className="base-medium text-light-1">{creator?.name || "Unknown User"}</p>
+            <p className="base-medium text-light-1">
+              {creator?.name || "Unknown User"}
+            </p>
             <div className="flex-center gap-2 text-light-3">
-              <p className="small-regular">{multiFormatDateString(post.$createdAt)}</p>
+              <p className="small-regular">
+                {multiFormatDateString(post.$createdAt)}
+              </p>
             </div>
           </div>
         </div>
 
+        {/* زر التعديل والحذف يظهران فقط لصاحب البوست */}
         {user.$id === creator?.$id && (
-          <button
-            onClick={() => setIsConfirmOpen(true)} // فتح النافذة بدل الكود القديم
-            className="p-2 rounded-lg cursor-pointer hover:opacity-80"
-          >
-            <img src="/assets/icons/delete.svg" alt="delete" width={20} height={20} />
-          </button>
+          <div className="flex gap-2">
+            <Link 
+              to={`/update-post/${post.$id}`} 
+              className="p-2 rounded-lg cursor-pointer hover:opacity-80 transition"
+            >
+              <img src="/assets/icons/edit.svg" alt="edit" width={20} height={20} />
+            </Link>
+            
+            <button
+              onClick={() => setIsConfirmOpen(true)}
+              className="p-2 rounded-lg cursor-pointer hover:opacity-80 transition"
+            >
+              <img src="/assets/icons/delete.svg" alt="delete" width={20} height={20} />
+            </button>
+          </div>
         )}
       </div>
 
@@ -81,10 +106,13 @@ const PostCard = ({ post }: PostCardProps) => {
           <p>{post.caption}</p>
           <ul className="flex gap-1 mt-2 flex-wrap">
             {post.tags?.map((tag: string) => (
-              <li key={tag} className="text-light-3">#{tag}</li>
+              <li key={tag} className="text-light-3">
+                #{tag}
+              </li>
             ))}
           </ul>
         </div>
+
         <img
           src={post.imageUrl || "/assets/icons/profile-placeholder.svg"}
           className="post-card_img"
