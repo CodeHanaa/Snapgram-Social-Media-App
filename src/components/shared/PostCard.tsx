@@ -33,21 +33,29 @@ const PostCard = ({ post }: PostCardProps) => {
         setComments(data);
       }
     };
-
     loadComments();
   }, [post.$id]);
 
   const handleDelete = () => {
-    deletePost(
-      { postId: post.$id, imageId: post.imageId },
-      {
-        onSuccess: () => {
-          toast.success("Post deleted successfully!");
-          setIsConfirmOpen(false);
-        },
+  console.log("البيانات المرسلة للحذف:");
+  console.log("Post ID:", post.$id);
+  console.log("Image ID:", post.imageId);
+
+  deletePost(
+    { postId: post.$id, imageId: post.imageId },
+    {
+      onSuccess: () => {
+        toast.success("Post deleted successfully!");
+        setIsConfirmOpen(false);
+        window.location.reload(); 
+      },
+      onError: (err) => {
+        console.error("خطأ الحذف من Appwrite:", err);
+        toast.error("فشل الحذف، راجعي الـ Console");
       }
-    );
-  };
+    }
+  );
+};
 
   const handleSendComment = async () => {
     if (!comment.trim()) return;

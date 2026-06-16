@@ -22,11 +22,16 @@ type PostFormProps = {
 const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { user } = useUserContext();
-  
+
   const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePost();
   const { mutateAsync: updatePost, isPending: isLoadingUpdate } = useUpdatePost();
 
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<z.infer<typeof PostSchema>>({
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors }
+  } = useForm<z.infer<typeof PostSchema>>({
     resolver: zodResolver(PostSchema),
     defaultValues: {
       caption: post ? post?.caption : "",
@@ -37,9 +42,11 @@ const PostForm = ({ post, action }: PostFormProps) => {
   });
 
   const onSubmit = async (values: z.infer<typeof PostSchema>) => {
-    const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
-    
-    if (action === 'Update' && post) {
+    const tagsArray = values.tags
+      ? values.tags.split(",").map((tag) => tag.trim())
+      : [];
+
+    if (action === "Update" && post) {
       const updatedPost = await updatePost({
         ...values,
         tags: tagsArray,
@@ -48,55 +55,103 @@ const PostForm = ({ post, action }: PostFormProps) => {
         imageUrl: post.imageUrl,
         file: values.file || [],
       });
+
       if (updatedPost) navigate(`/posts/${post.$id}`);
       return;
     }
 
-    // هنا تم تعديل الـ navigate ليكون لصفحة التفاصيل
+    // ✅ التعديل هنا
     const newPost = await createPost({
       ...values,
       tags: tagsArray,
-      userId: user.$id,
+      userId: user.accountId, // Auth ID للـ permissions
+      creatorId: user.$id,    // Document ID للـ relationship
     });
-    
+
     if (newPost) {
-      navigate(`/posts/${newPost.$id}`); 
+      navigate(`/posts/${newPost.$id}`);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-9 w-full max-w-5xl">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex flex-col gap-9 w-full max-w-5xl"
+    >
       <div className="flex flex-col gap-2">
         <label className="text-white">Caption</label>
-        <textarea className="shad-textarea custom-scrollbar" {...register("caption")} />
-        {errors.caption && <p className="text-red-500 text-sm">{errors.caption.message}</p>}
+
+        <textarea
+          className="shad-textarea custom-scrollbar"
+          {...register("caption")}
+        />
+
+        {errors.caption && (
+          <p className="text-red-500 text-sm">
+            {errors.caption.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Photos</label>
-        <FileUploader fieldChange={(files: File[]) => setValue("file", files)} mediaUrl={post?.imageUrl} />
-        {errors.file && <p className="text-red-500 text-sm">{errors.file.message}</p>}
+
+        <FileUploader
+          fieldChange={(files: File[]) => setValue("file", files)}
+          mediaUrl={post?.imageUrl}
+        />
+
+        {errors.file && (
+          <p className="text-red-500 text-sm">
+            {errors.file.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Location</label>
-        <input className="shad-input" {...register("location")} />
-        {errors.location && <p className="text-red-500 text-sm">{errors.location.message}</p>}
+
+        <input
+          className="shad-input"
+          {...register("location")}
+        />
+
+        {errors.location && (
+          <p className="text-red-500 text-sm">
+            {errors.location.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-white">Add Tags (separated by comma)</label>
-        <input className="shad-input" placeholder="Art, Expression, Learn" {...register("tags")} />
+        <label className="text-white">
+          Add Tags (separated by comma)
+        </label>
+
+        <input
+          className="shad-input"
+          placeholder="Art, Expression, Learn"
+          {...register("tags")}
+        />
       </div>
 
       <div className="flex gap-4 items-center justify-end">
-        <button type="button" className="shad-button_dark_4" onClick={() => navigate(-1)}>Cancel</button>
-        <button 
-          type="submit" 
-          disabled={isLoadingCreate || isLoadingUpdate} 
+        <button
+          type="button"
+          className="shad-button_dark_4"
+          onClick={() => navigate(-1)}
+        >
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          disabled={isLoadingCreate || isLoadingUpdate}
           className="shad-button_primary whitespace-nowrap"
         >
-          {isLoadingCreate || isLoadingUpdate ? "Loading..." : `${action} Post`}
+          {isLoadingCreate || isLoadingUpdate
+            ? "Loading..."
+            : `${action} Post`}
         </button>
       </div>
     </form>

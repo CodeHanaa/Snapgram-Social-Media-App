@@ -1,4 +1,4 @@
-import { ID, Query } from "appwrite"; 
+import { ID, Query, Permission, Role } from "appwrite";
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import type { INewUser } from "@/Types";
 
@@ -134,6 +134,7 @@ export async function signOutAccount() {
 // هذا هو الشكل الذي تستقبل فيه الدالة البيانات
 export async function createPost(post: {
   userId: string;
+  creatorId: string;
   caption: string;
   file: File[];
   location: string;
@@ -153,19 +154,24 @@ export async function createPost(post: {
       uploadedFile.$id
     );
 
-    // 3. إنشاء البوست في Database وربط المستخدم بالـ creator
+    // 3. إنشاء البوست
     const newPost = await appwriteService.databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       ID.unique(),
       {
-        creator: post.userId,      // هنا الربط الأساسي (الـ ID بتاعك بيروح للـ Column اللي اسمه creator)
+        creator: post.creatorId,
         caption: post.caption,
         imageUrl: fileUrl.toString(),
         imageId: uploadedFile.$id,
         location: post.location,
         tags: post.tags,
-      }
+      },
+      [
+        Permission.read(Role.any()),
+        Permission.update(Role.user(post.userId)),
+        Permission.delete(Role.user(post.userId)),
+      ]
     );
 
     return newPost;
@@ -195,20 +201,28 @@ export async function getRecentPosts() {
 
 
 // 🗑️ DELETE POST
-export async function deletePost(postId: string, imageId: string) {
-  if (!postId || !imageId) throw Error;
+// في src/lib/Appwrite/Api.ts
 
+export async function deletePost(postId: string, imageId: string) {
   try {
-    await appwriteService.storage.deleteFile(appwriteConfig.storageId, imageId);
-    await appwriteService.databases.deleteDocument(
+    // 1. حذف الصورة أولاً
+    try {
+      await appwriteService.storage.deleteFile(appwriteConfig.storageId, imageId);
+    } catch (error) {
+      console.warn("Image file not found, skipping storage delete");
+    }
+
+    // 2. حذف البوست من قاعدة البيانات
+    const result = await appwriteService.databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId
     );
-    return { status: "ok" };
+    
+    return result;
   } catch (error) {
-    console.error("DeletePost Error:", error);
-    throw error;
+    console.error("خطأ الحذف من الـ Backend:", error);
+    throw error; // هذا سيرمي الخطأ لملف PostCard ليظهر الـ Toast
   }
 }
 
