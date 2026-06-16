@@ -37,28 +37,32 @@ const PostForm = ({ post, action }: PostFormProps) => {
   });
 
   const onSubmit = async (values: z.infer<typeof PostSchema>) => {
-  const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
-  
-  if (action === 'Update' && post) {
-    const updatedPost = await updatePost({
+    const tagsArray = values.tags ? values.tags.split(',').map(tag => tag.trim()) : [];
+    
+    if (action === 'Update' && post) {
+      const updatedPost = await updatePost({
+        ...values,
+        tags: tagsArray,
+        postId: post.$id,
+        imageId: post.imageId,
+        imageUrl: post.imageUrl,
+        file: values.file || [],
+      });
+      if (updatedPost) navigate(`/posts/${post.$id}`);
+      return;
+    }
+
+    // هنا تم تعديل الـ navigate ليكون لصفحة التفاصيل
+    const newPost = await createPost({
       ...values,
       tags: tagsArray,
-      postId: post.$id,
-      imageId: post.imageId,
-      imageUrl: post.imageUrl,
-      file: values.file || [],
+      userId: user.$id,
     });
-    if (updatedPost) navigate(`/posts/${post.$id}`);
-    return;
-  }
-
-  const newPost = await createPost({
-    ...values,
-    tags: tagsArray,
-    userId: user.$id,
-  });
-  if (newPost) navigate("/");
-};
+    
+    if (newPost) {
+      navigate(`/posts/${newPost.$id}`); 
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-9 w-full max-w-5xl">

@@ -5,7 +5,8 @@ import {
   createPost, 
   deletePost, 
   getPostById,  // تأكدي من إضافتها هنا
-  updatePost
+  updatePost,
+  likePost
 } from "@/lib/Appwrite/Api"; 
 import { appwriteConfig } from "@/lib/Appwrite/Config"; // تأكدي من المسار الصحيح
 
@@ -63,5 +64,27 @@ export const useUpdatePost = () => {
         queryKey: ["getRecentPosts"],
       });
     },
+  });
+};
+
+export const useLikePost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ postId, likesArray }: { postId: string; likesArray: string[] }) => 
+      likePost(postId, likesArray),
+    
+    onSuccess: (data) => {
+      // هذا السطر يقوم بتحديث البيانات تلقائياً في الصفحة بدون Refresh
+      queryClient.invalidateQueries({
+        queryKey: ["getPostById", data?.$id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["getRecentPosts"],
+      });
+    },
+    onError: (error) => {
+      console.error("Error liking post:", error);
+    }
   });
 };

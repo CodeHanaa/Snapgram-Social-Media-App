@@ -44,3 +44,7 @@ export const formatDateString = (dateString: string) => {
 
   return formattedDate;
 };
+
+export const checkIsLiked = (likeList: string[], userId: string) => {
+  return likeList.includes(userId);
+};

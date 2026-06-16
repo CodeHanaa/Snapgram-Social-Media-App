@@ -131,34 +131,37 @@ export async function signOutAccount() {
 }
 
 // 🔵 CREATE POST (تم تعديلها لضمان توافق الـ Relationship)
+// هذا هو الشكل الذي تستقبل فيه الدالة البيانات
 export async function createPost(post: {
-  userId: string; 
+  userId: string;
   caption: string;
   file: File[];
   location: string;
   tags: string[];
 }) {
   try {
+    // 1. رفع الصورة إلى Storage
     const uploadedFile = await appwriteService.storage.createFile(
       appwriteConfig.storageId,
       ID.unique(),
       post.file[0]
     );
 
-    // هذا السطر يعيد نصاً (URL)، فلا تستخدمي .href
+    // 2. الحصول على رابط الصورة
     const fileUrl = appwriteService.storage.getFileView(
       appwriteConfig.storageId,
       uploadedFile.$id
     );
 
+    // 3. إنشاء البوست في Database وربط المستخدم بالـ creator
     const newPost = await appwriteService.databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       ID.unique(),
       {
-        creator: post.userId, // هذا يجب أن يكون الـ $id للمستخدم في collection users
+        creator: post.userId,      // هنا الربط الأساسي (الـ ID بتاعك بيروح للـ Column اللي اسمه creator)
         caption: post.caption,
-        imageUrl: fileUrl.toString(), // تأكدي من تحويله لنص
+        imageUrl: fileUrl.toString(),
         imageId: uploadedFile.$id,
         location: post.location,
         tags: post.tags,
@@ -167,7 +170,7 @@ export async function createPost(post: {
 
     return newPost;
   } catch (error) {
-    console.error("Error in createPost API:", error);
+    console.error("خطأ أثناء إنشاء البوست:", error);
     throw error;
   }
 }
@@ -178,22 +181,18 @@ export async function getRecentPosts() {
     const posts = await appwriteService.databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      [
-        Query.orderDesc("$createdAt"), 
-        Query.limit(20)
-      ]
+      [Query.orderDesc("$createdAt"), Query.limit(20)]
     );
 
-    // إذا استمرت المشكلة، هذا يعني أن الـ creator لا يُجلب ككائن
-    // يمكنك إضافة هذه الخطوة للتأكد:
-    console.log("Posts fetched:", posts.documents);
-    
+    if (!posts) throw Error;
+
     return posts;
   } catch (error) {
     console.error("Error fetching recent posts:", error);
     throw error;
   }
 }
+
 
 // 🗑️ DELETE POST
 export async function deletePost(postId: string, imageId: string) {
@@ -274,5 +273,97 @@ export async function updatePost(post: {
   } catch (error) {
     console.error("Error in updatePost API:", error);
     throw error;
+  }
+}
+
+export async function getCommentsByPost(postId: string) {
+  const response = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.commentsCollectionId,
+    [Query.equal("posts", postId)]
+  );
+  return response.documents;
+}
+
+export async function createComment({ postId, userId, content }: { postId: string, userId: string, content: string }) {
+  try {
+    const newComment = await appwriteService.databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      ID.unique(),
+      {
+        content: content,
+        users: userId, // يجب أن يتطابق الاسم مع اسم العمود في Appwrite (users)
+        posts: postId  // يجب أن يتطابق الاسم مع اسم العمود في Appwrite (posts)
+      }
+    );
+    return newComment;
+  } catch (error) {
+    console.error("Error creating comment:", error);
+  }
+}
+
+export async function likePost(postId: string, likesArray: string[]) {
+  try {
+    const updatedPost = await appwriteService.databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId,
+      { likes: likesArray }
+    );
+    return updatedPost;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// 1. دالة حفظ البوست
+export async function savePost(postId: string, userId: string) {
+  try {
+    const newSavedPost = await appwriteService.databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      ID.unique(),
+      {
+        user: userId, // تأكدي أن هذا هو الـ ID الصحيح للمستخدم
+        post: postId,
+      }
+    );
+    return newSavedPost;
+  } catch (error) {
+    console.error("Error in savePost:", error);
+  }
+}
+
+// 2. دالة إلغاء الحفظ
+export async function deleteSavedPost(savedRecordId: string) {
+  try {
+    await appwriteService.databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      savedRecordId
+    );
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Error in deleteSavedPost:", error);
+  }
+}
+
+export async function getSavedPosts(userId: string) {
+  // إذا لم يكن هناك userId، لا تنفذي الاستعلام
+  if (!userId) {
+    console.warn("getSavedPosts called without a valid userId");
+    return [];
+  }
+  
+  try {
+    const savedPosts = await appwriteService.databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      [Query.equal("user", userId)]
+    );
+    return savedPosts.documents;
+  } catch (error) {
+    console.error("Error in getSavedPosts:", error);
   }
 }
