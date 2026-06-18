@@ -123,10 +123,12 @@ const uploadedFile = await appwriteService.storage.createFile(
   post.file[0]
 );
 
-  const fileUrl = appwriteService.storage.getFilePreview(
-  appwriteConfig.storageId,
-  uploadedFile.$id
-).toString();
+  const fileUrl = appwriteService.storage
+  .getFileView(
+    appwriteConfig.storageId,
+    uploadedFile.$id
+  )
+  .toString();
 
   const newPost = await appwriteService.databases.createDocument(
     appwriteConfig.databaseId,

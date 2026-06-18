@@ -118,7 +118,8 @@ const PostCard = ({ post }: PostCardProps) => {
   };
 
   /* ================= UI ================= */
-
+console.log(JSON.stringify(post))
+  
   return (
     <div className="post-card relative">
 
@@ -230,7 +231,13 @@ const PostCard = ({ post }: PostCardProps) => {
 
       {/* STATS */}
       <div className="mt-5">
-        <PostStats post={post} userId={user?.$id || ""} />
+        <PostStats
+          post={{
+            ...post,
+            likes: Array.isArray(post.likes) ? post.likes : [],
+          }}
+          userId={user?.$id || ""}
+        />
       </div>
 
       {/* COMMENT BUTTON */}
