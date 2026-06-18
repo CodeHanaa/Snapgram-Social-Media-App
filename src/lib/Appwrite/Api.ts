@@ -1,69 +1,53 @@
 import { ID, Query } from "appwrite";
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import type { INewPost, INewUser, IPost, IUpdatePost } from "@/Types";
-
 import type { Models } from "appwrite";
 
+/* ================= COMMENT TYPE ================= */
 type CommentType = Models.Document & {
   content: string;
-
   users?: {
     $id: string;
     name: string;
   };
-
   posts: string;
 };
 
-// ================= SIGN UP =================
+/* ================= SIGN UP ================= */
 export async function signUpAccount(user: {
   email: string;
   password: string;
   name: string;
   userName: string;
 }) {
-  try {
-    const newAccount = await appwriteService.account.create(
-      ID.unique(),
-      user.email,
-      user.password,
-      user.name
-    );
-
-    return newAccount;
-  } catch (error) {
-    console.error("SignUp Error:", error);
-    throw error;
-  }
+  return await appwriteService.account.create(
+    ID.unique(),
+    user.email,
+    user.password,
+    user.name
+  );
 }
 
-// ================= CREATE USER =================
+/* ================= CREATE USER ================= */
 export async function createUserAccount(user: INewUser) {
-  try {
-    const profileImageUrl =
-      user.imageUrl && user.imageUrl.startsWith("http")
-        ? user.imageUrl
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            user.name
-          )}&background=random`;
+  const profileImageUrl =
+    user.imageUrl && user.imageUrl.startsWith("http")
+      ? user.imageUrl
+      : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+          user.name
+        )}&background=random`;
 
-    const newUser = await saveUserToDatabase({
-      accountId: user.accountId,
-      name: user.name,
-      email: user.email,
-      username: user.username,
-      bio: user.bio || "",
-      imageUrl: profileImageUrl,
-    });
-
-    return newUser;
-  } catch (error) {
-    console.error("CreateUser Error:", error);
-    throw error;
-  }
+  return await saveUserToDatabase({
+    accountId: user.accountId,
+    name: user.name,
+    email: user.email,
+    username: user.username,
+    bio: user.bio || "",
+    imageUrl: profileImageUrl,
+  });
 }
 
-// ================= SAVE USER =================
+/* ================= SAVE USER ================= */
 export async function saveUserToDatabase(user: {
   accountId: string;
   name: string;
@@ -72,57 +56,43 @@ export async function saveUserToDatabase(user: {
   bio?: string;
   imageUrl: string;
 }) {
-  try {
-    const newUser = await appwriteService.databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.userCollectionId,
-      ID.unique(),
-      {
-        accountId: user.accountId,
-        name: user.name,
-        email: user.email,
-        username: user.username || "",
-        bio: user.bio || "",
-        imageId: "",
-        imageUrl: user.imageUrl,
-      }
-    );
-
-    return newUser;
-  } catch (error) {
-    console.error("SaveUser Error:", error);
-    throw error;
-  }
+  return await appwriteService.databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    ID.unique(),
+    {
+      accountId: user.accountId,
+      name: user.name,
+      email: user.email,
+      username: user.username || "",
+      bio: user.bio || "",
+      imageId: "",
+      imageUrl: user.imageUrl,
+    }
+  );
 }
 
-// ================= SIGN IN =================
+/* ================= SIGN IN ================= */
 export async function signInAccount(user: {
   email: string;
   password: string;
 }) {
   try {
-    try {
-      await appwriteService.account.deleteSession("current");
-    } catch {
-      // ignore
-    }
-
-    return await appwriteService.account.createEmailPasswordSession(
-      user.email,
-      user.password
-    );
+    await appwriteService.account.deleteSession("current");
   } catch (error) {
-    console.error("SignIn Error:", error);
-    throw error;
-  }
+  console.error(error);
 }
 
-// ================= GET CURRENT USER =================
+  return await appwriteService.account.createEmailPasswordSession(
+    user.email,
+    user.password
+  );
+}
+
+/* ================= CURRENT USER ================= */
 export async function getCurrentUser() {
   try {
     const currentAccount = await appwriteService.account.get();
-
-    if (!currentAccount) return null;
 
     const currentUser = await appwriteService.databases.listDocuments(
       appwriteConfig.databaseId,
@@ -130,39 +100,33 @@ export async function getCurrentUser() {
       [Query.equal("accountId", currentAccount.$id)]
     );
 
-    if (!currentUser || currentUser.documents.length === 0) {
-      return null;
-    }
-
-    return currentUser.documents[0];
-  } catch (error) {
-    console.error("GetCurrentUser Error:", error);
+    return currentUser.documents[0] || null;
+  } catch {
     return null;
   }
 }
 
-// ================= SIGN OUT =================
+/* ================= SIGN OUT ================= */
 export async function signOutAccount() {
-  try {
-    await appwriteService.account.deleteSession("current");
-  } catch (error) {
-    console.error("SignOut Error:", error);
-    throw error;
-  }
+  return await appwriteService.account.deleteSession("current");
 }
 
-// ================= CREATE POST =================
+/* ================= CREATE POST ================= */
 export async function createPost(post: INewPost): Promise<IPost> {
-  const uploadedFile = await appwriteService.storage.createFile(
-    appwriteConfig.storageId,
-    ID.unique(),
-    post.file[0]
-  );
+ if (!post.file || post.file.length === 0) {
+  throw new Error("No file selected");
+}
+
+const uploadedFile = await appwriteService.storage.createFile(
+  appwriteConfig.storageId,
+  ID.unique(),
+  post.file[0]
+);
 
   const fileUrl = appwriteService.storage.getFilePreview(
-    appwriteConfig.storageId,
-    uploadedFile.$id
-  );
+  appwriteConfig.storageId,
+  uploadedFile.$id
+).toString();
 
   const newPost = await appwriteService.databases.createDocument(
     appwriteConfig.databaseId,
@@ -173,55 +137,90 @@ export async function createPost(post: INewPost): Promise<IPost> {
       caption: post.caption,
       imageUrl: fileUrl,
       imageId: uploadedFile.$id,
-      location: post.location,
-      tags: post.tags,
+      location: post.location || "",
+      tags: post.tags || [],
+      likes: [],
     }
   );
 
   return newPost as unknown as IPost;
 }
 
-// ================= RECENT POSTS =================
+/* ================= RECENT POSTS ================= */
 export async function getRecentPosts() {
+  const posts = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    [Query.orderDesc("$createdAt"), Query.limit(20)]
+  );
+
+  return posts.documents;
+}
+
+/* ================= SAVE POST ================= */
+export async function savePost(postId: string, userId: string) {
+  return await appwriteService.databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.savesCollectionId,
+    ID.unique(),
+    {
+      user: userId,
+      post: postId,
+    }
+  );
+}
+
+// ================= GET SAVED POSTS =================
+export async function getSavedPosts(userId: string) {
   try {
-    const posts = await appwriteService.databases.listDocuments(
+    const response = await appwriteService.databases.listDocuments(
       appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      [Query.orderDesc("$createdAt"), Query.limit(20)]
+      appwriteConfig.savesCollectionId,
+      [Query.equal("user", userId)]
     );
 
-    return posts.documents;
+    return response.documents;
   } catch (error) {
-    console.error(error);
-    throw error;
+    console.error("Get Saved Posts Error:", error);
+    return [];
   }
 }
 
-// ================= DELETE POST =================
-export async function deletePost(postId: string, imageId: string) {
+// ================= DELETE SAVED POST =================
+export async function deleteSavedPost(savedId: string) {
   try {
     await appwriteService.databases.deleteDocument(
       appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId
+      appwriteConfig.savesCollectionId,
+      savedId
     );
-
-    if (imageId) {
-      await appwriteService.storage.deleteFile(
-        appwriteConfig.storageId,
-        imageId
-      );
-    }
 
     return { status: "ok" };
   } catch (error) {
-    console.error("Delete Post Error:", error);
+    console.error("Delete Saved Error:", error);
     throw error;
   }
 }
 
-// ================= GET POST BY ID =================
-// ================= GET POST BY ID =================
+/* ================= DELETE POST ================= */
+export async function deletePost(postId: string, imageId: string) {
+  await appwriteService.databases.deleteDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    postId
+  );
+
+  if (imageId) {
+    await appwriteService.storage.deleteFile(
+      appwriteConfig.storageId,
+      imageId
+    );
+  }
+
+  return { status: "ok" };
+}
+
+/* ================= GET POST BY ID ================= */
 export async function getPostById(postId: string): Promise<IPost> {
   const post = await appwriteService.databases.getDocument(
     appwriteConfig.databaseId,
@@ -229,12 +228,10 @@ export async function getPostById(postId: string): Promise<IPost> {
     postId
   );
 
-  // بدلاً من بناء كائن يدوي، نقوم بإرجاع الـ post كما هو
-  // ونتأكد من أنه يطابق النوع IPost باستخدام "as IPost"
   return post as unknown as IPost;
 }
 
-// ================= UPDATE POST =================
+/* ================= UPDATE POST ================= */
 export async function updatePost(post: IUpdatePost) {
   let imageId = post.imageId;
   let imageUrl = post.imageUrl;
@@ -267,27 +264,21 @@ export async function updatePost(post: IUpdatePost) {
       caption: post.caption,
       imageUrl,
       imageId,
-      
-      // ✅ الحل هنا
       location: post.location ?? "",
       tags: post.tags ?? [],
     }
   );
 }
 
+/* ================= COMMENTS ================= */
 export async function getCommentsByPost(postId: string): Promise<CommentType[]> {
-  try {
-    const response = await appwriteService.databases.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.commentsCollectionId,
-      [Query.equal("posts", postId)]
-    );
+  const response = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.commentsCollectionId,
+    [Query.equal("posts", postId)]
+  );
 
-    return response.documents as unknown as CommentType[];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
+  return response.documents as unknown as CommentType[];
 }
 
 export async function createComment({
@@ -299,38 +290,26 @@ export async function createComment({
   userId: string;
   content: string;
 }) {
-  try {
-    return await appwriteService.databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.commentsCollectionId,
-      ID.unique(),
-      {
-        posts: postId,
-        users: userId,
-        content,
-      }
-    );
-  } catch (error) {
-    console.error("Create comment error:", error);
-    throw error;
-  }
+  return await appwriteService.databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.commentsCollectionId,
+    ID.unique(),
+    {
+      posts: postId,
+      users: userId,
+      content,
+    }
+  );
 }
 
-// ================= LIKE POST =================
+/* ================= LIKE POST ================= */
 export async function likePost(postId: string, likesArray: string[]) {
-  try {
-    const updatedPost = await appwriteService.databases.updateDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId,
-      {
-        likes: likesArray,
-      }
-    );
-
-    return updatedPost;
-  } catch (error) {
-    console.error("Error liking post:", error);
-    throw error;
-  }
+  return await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    postId,
+    {
+      likes: likesArray,
+    }
+  );
 }

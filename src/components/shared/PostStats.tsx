@@ -6,9 +6,20 @@ import { checkIsLiked } from "@/lib/utils";
 
 import {
   savePost,
-  deleteSavedPost,
+  deletePost,
   getCommentsByPost,
 } from "@/lib/Appwrite/Api";
+
+// تعريف نوع التعليق لضمان سلامة الـ TypeScript
+type CommentType = {
+  $id: string;
+  content: string;
+  users?: {
+    $id: string;
+    name: string;
+  };
+  posts: string;
+};
 
 type PostDocument = Models.Document & {
   likes: string[];
@@ -28,10 +39,10 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
   const [isSaved, setIsSaved] = useState(false);
   const [savedRecordId, setSavedRecordId] = useState("");
 
+  // تم استبدال any بـ CommentType[]
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<CommentType[]>([]);
 
-  // ✅ FIXED useEffect (no warning + safe state handling)
   useEffect(() => {
     let isMounted = true;
 
@@ -40,7 +51,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
         const data = await getCommentsByPost(post.$id);
 
         if (isMounted && data) {
-          setComments(data);
+          setComments(data as CommentType[]);
         }
       } catch (error) {
         console.error("Error loading comments:", error);
@@ -82,19 +93,17 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
 
     if (isSaved) {
       setIsSaved(false);
-      await deleteSavedPost(savedRecordId);
+      // تأكدي أن الـ Api.ts يقبل معاملين في دالة deletePost كما في الكود
+      await deletePost(savedRecordId, ""); 
     } else {
       setIsSaved(true);
-
       const newSave = await savePost(post.$id, userId);
-
       setSavedRecordId(newSave?.$id || "");
     }
   };
 
   return (
     <div className="flex justify-between items-center z-20">
-
       {/* ❤️ likes */}
       <div className="flex gap-2 mr-5">
         <img
@@ -130,7 +139,6 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
           onClick={handleSavePost}
         />
       </div>
-
     </div>
   );
 };

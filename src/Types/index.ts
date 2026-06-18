@@ -41,12 +41,12 @@ export interface IPost extends Models.Document {
 
 // ===== CREATE POST =====
 export type INewPost = {
+  // userId: string;
+  creatorId: string;
   caption: string;
   file: File[];
   location?: string;
-  tags: string[];
-  
-  creatorId: string; // DB relationship ID
+  tags: string[]; // 👈 FIX
 };
 
 // ===== UPDATE POST =====
@@ -56,9 +56,8 @@ export type IUpdatePost = {
   imageId: string;
   imageUrl: string;
   file: File[];
-
   location?: string;
-  tags?: string[];
+  tags: string[]; // 👈 FIX
 };
 
 // ===== CONTEXT =====

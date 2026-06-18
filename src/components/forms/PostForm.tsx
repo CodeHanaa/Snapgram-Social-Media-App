@@ -8,10 +8,10 @@ import { useUserContext } from "@/Context/useAuthContext";
 import type { IPost } from "@/Types";
 
 const PostSchema = z.object({
-  caption: z.string().min(5, { message: "Minimum 5 characters." }),
+  caption: z.string().min(5),
   file: z.custom<File[]>().optional(),
-  location: z.string().min(1, { message: "Location is required" }),
-  tags: z.string(),
+  location: z.string().min(1),
+  tags: z.string(), // خليها string في الفورم فقط
 });
 
 type PostFormProps = {
@@ -46,29 +46,29 @@ const PostForm = ({ post, action }: PostFormProps) => {
     ? values.tags.split(",").map((tag) => tag.trim())
     : [];
 
-  // نحدد مصفوفة الملفات بوضوح
   const files = values.file || [];
+
+  const basePayload = {
+    caption: values.caption,
+    location: values.location,
+    file: files,
+    tags: tagsArray, // 👈 هنا المهم
+    creatorId: user.$id,
+  };
 
   if (action === "Update" && post) {
     const updatedPost = await updatePost({
-      ...values,
-      tags: tagsArray,
+      ...basePayload,
       postId: post.$id,
       imageId: post.imageId,
       imageUrl: post.imageUrl,
-      file: files, // هنا استخدمنا المصفوفة المضمونة
     });
 
     if (updatedPost) navigate(`/posts/${post.$id}`);
     return;
   }
 
-  const newPost = await createPost({
-    ...values,
-    tags: tagsArray,
-    file: files, // هنا أيضاً
-    creatorId: user.$id,
-  });
+  const newPost = await createPost(basePayload);
 
   if (newPost) {
     navigate(`/posts/${newPost.$id}`);
@@ -94,7 +94,11 @@ const PostForm = ({ post, action }: PostFormProps) => {
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Photos</label>
         <FileUploader
-          fieldChange={(files: File[]) => setValue("file", files)}
+          fieldChange={(files: File[]) =>
+            setValue("file", files, {
+              shouldValidate: true,
+            })
+          }
           mediaUrl={post?.imageUrl}
         />
         {errors.file && (
