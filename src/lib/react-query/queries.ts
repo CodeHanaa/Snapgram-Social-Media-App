@@ -1,90 +1,95 @@
-import type {IPost} from "@/Types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { 
-  getRecentPosts, 
-  createPost, 
-  deletePost, 
-  getPostById,  // تأكدي من إضافتها هنا
-  updatePost,
-  likePost
-} from "@/lib/Appwrite/Api"; 
-import { appwriteConfig } from "@/lib/Appwrite/Config"; // تأكدي من المسار الصحيح
+import type { INewPost, IUpdatePost } from "@/Types";
 
-// 1. جلب البوستات الحديثة
+import {
+  getRecentPosts,
+  createPost,
+  deletePost,
+  getPostById,
+  updatePost,
+  likePost,
+} from "@/lib/Appwrite/Api";
+
+/* ================= POSTS ================= */
+
 export const useGetRecentPosts = () => {
   return useQuery({
-    queryKey: ['getRecentPosts'],
+    queryKey: ["posts"],
     queryFn: getRecentPosts,
   });
 };
 
-// 2. إنشاء بوست جديد
+/* ================= CREATE ================= */
+
 export const useCreatePost = () => {
+  const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: (post: any) => createPost(post),
+    mutationFn: (post: INewPost) => createPost(post),
+
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["posts"] });
+    },
   });
 };
 
-// 3. حذف بوست
+/* ================= DELETE ================= */
+
 export const useDeletePost = () => {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
+
   return useMutation({
     mutationFn: ({ postId, imageId }: { postId: string; imageId: string }) =>
       deletePost(postId, imageId),
+
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["getRecentPosts"],
-      });
+      qc.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 };
 
-// 4. جلب بوست معين بواسطة الـ ID (لصفحة التعديل)
+/* ================= GET BY ID ================= */
+
 export const useGetPostById = (postId: string) => {
   return useQuery({
-    queryKey: [appwriteConfig.postCollectionId, postId],
+    queryKey: ["post", postId],
     queryFn: () => getPostById(postId),
     enabled: !!postId,
-  }) as { data: IPost | undefined; isPending: boolean }; // <--- أضيفي هذا السطر
+  });
 };
 
+/* ================= UPDATE ================= */
+
 export const useUpdatePost = () => {
-  const queryClient = useQueryClient();
-  
+  const qc = useQueryClient();
+
   return useMutation({
-    mutationFn: (post: any) => updatePost(post),
-    onSuccess: (data) => {
-      // استخدمي النص "getPostById" أو أي مفتاح تستخدمينه لجلب البوست الواحد
-      queryClient.invalidateQueries({
-        queryKey: ["getPostById", data?.$id],
-      });
-      
-      // استخدمي النص "getRecentPosts" (أو أي مفتاح تستخدمينه لجلب البوستات في الـ Home)
-      queryClient.invalidateQueries({
-        queryKey: ["getRecentPosts"],
-      });
+    mutationFn: (post: IUpdatePost) => updatePost(post),
+
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["post", variables.postId] });
+      qc.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 };
 
+/* ================= LIKE ================= */
+
 export const useLikePost = () => {
-  const queryClient = useQueryClient();
+  const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ postId, likesArray }: { postId: string; likesArray: string[] }) => 
-      likePost(postId, likesArray),
-    
-    onSuccess: (data) => {
-      // هذا السطر يقوم بتحديث البيانات تلقائياً في الصفحة بدون Refresh
-      queryClient.invalidateQueries({
-        queryKey: ["getPostById", data?.$id],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["getRecentPosts"],
-      });
+    mutationFn: ({
+      postId,
+      likesArray,
+    }: {
+      postId: string;
+      likesArray: string[];
+    }) => likePost(postId, likesArray),
+
+    onSuccess: (_, variables) => {
+      qc.invalidateQueries({ queryKey: ["post", variables.postId] });
+      qc.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: (error) => {
-      console.error("Error liking post:", error);
-    }
   });
 };

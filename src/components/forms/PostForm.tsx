@@ -42,36 +42,38 @@ const PostForm = ({ post, action }: PostFormProps) => {
   });
 
   const onSubmit = async (values: z.infer<typeof PostSchema>) => {
-    const tagsArray = values.tags
-      ? values.tags.split(",").map((tag) => tag.trim())
-      : [];
+  const tagsArray = values.tags
+    ? values.tags.split(",").map((tag) => tag.trim())
+    : [];
 
-    if (action === "Update" && post) {
-      const updatedPost = await updatePost({
-        ...values,
-        tags: tagsArray,
-        postId: post.$id,
-        imageId: post.imageId,
-        imageUrl: post.imageUrl,
-        file: values.file || [],
-      });
+  // نحدد مصفوفة الملفات بوضوح
+  const files = values.file || [];
 
-      if (updatedPost) navigate(`/posts/${post.$id}`);
-      return;
-    }
-
-    // ✅ التعديل هنا
-    const newPost = await createPost({
+  if (action === "Update" && post) {
+    const updatedPost = await updatePost({
       ...values,
       tags: tagsArray,
-      userId: user.accountId, // Auth ID للـ permissions
-      creatorId: user.$id,    // Document ID للـ relationship
+      postId: post.$id,
+      imageId: post.imageId,
+      imageUrl: post.imageUrl,
+      file: files, // هنا استخدمنا المصفوفة المضمونة
     });
 
-    if (newPost) {
-      navigate(`/posts/${newPost.$id}`);
-    }
-  };
+    if (updatedPost) navigate(`/posts/${post.$id}`);
+    return;
+  }
+
+  const newPost = await createPost({
+    ...values,
+    tags: tagsArray,
+    file: files, // هنا أيضاً
+    creatorId: user.$id,
+  });
+
+  if (newPost) {
+    navigate(`/posts/${newPost.$id}`);
+  }
+};
 
   return (
     <form
@@ -80,54 +82,39 @@ const PostForm = ({ post, action }: PostFormProps) => {
     >
       <div className="flex flex-col gap-2">
         <label className="text-white">Caption</label>
-
         <textarea
           className="shad-textarea custom-scrollbar"
           {...register("caption")}
         />
-
         {errors.caption && (
-          <p className="text-red-500 text-sm">
-            {errors.caption.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.caption.message}</p>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Photos</label>
-
         <FileUploader
           fieldChange={(files: File[]) => setValue("file", files)}
           mediaUrl={post?.imageUrl}
         />
-
         {errors.file && (
-          <p className="text-red-500 text-sm">
-            {errors.file.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.file.message}</p>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Location</label>
-
         <input
           className="shad-input"
           {...register("location")}
         />
-
         {errors.location && (
-          <p className="text-red-500 text-sm">
-            {errors.location.message}
-          </p>
+          <p className="text-red-500 text-sm">{errors.location.message}</p>
         )}
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-white">
-          Add Tags (separated by comma)
-        </label>
-
+        <label className="text-white">Add Tags (separated by comma)</label>
         <input
           className="shad-input"
           placeholder="Art, Expression, Learn"
@@ -143,7 +130,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
         >
           Cancel
         </button>
-
         <button
           type="submit"
           disabled={isLoadingCreate || isLoadingUpdate}

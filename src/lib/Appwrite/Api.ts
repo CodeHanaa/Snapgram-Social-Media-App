@@ -1,8 +1,21 @@
-import { ID, Query, Permission, Role } from "appwrite";
+import { ID, Query } from "appwrite";
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
-import type { INewUser } from "@/Types";
+import type { INewPost, INewUser, IPost, IUpdatePost } from "@/Types";
 
-// 🔵 SIGN UP (AUTH ONLY)
+import type { Models } from "appwrite";
+
+type CommentType = Models.Document & {
+  content: string;
+
+  users?: {
+    $id: string;
+    name: string;
+  };
+
+  posts: string;
+};
+
+// ================= SIGN UP =================
 export async function signUpAccount(user: {
   email: string;
   password: string;
@@ -24,16 +37,18 @@ export async function signUpAccount(user: {
   }
 }
 
-// 🟢 CREATE USER (DATABASE PROFILE ONLY)
+// ================= CREATE USER =================
 export async function createUserAccount(user: INewUser) {
   try {
-    const profileImageUrl = 
-      user.imageUrl && user.imageUrl.startsWith('http') 
-        ? user.imageUrl 
-        : `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&background=random`;
+    const profileImageUrl =
+      user.imageUrl && user.imageUrl.startsWith("http")
+        ? user.imageUrl
+        : `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            user.name
+          )}&background=random`;
 
     const newUser = await saveUserToDatabase({
-      userId: user.accountId,
+      accountId: user.accountId,
       name: user.name,
       email: user.email,
       username: user.username,
@@ -48,9 +63,9 @@ export async function createUserAccount(user: INewUser) {
   }
 }
 
-// 💾 SAVE USER TO DATABASE
+// ================= SAVE USER =================
 export async function saveUserToDatabase(user: {
-  userId: string;
+  accountId: string;
   name: string;
   email: string;
   username?: string;
@@ -63,7 +78,7 @@ export async function saveUserToDatabase(user: {
       appwriteConfig.userCollectionId,
       ID.unique(),
       {
-        accountId: user.userId,
+        accountId: user.accountId,
         name: user.name,
         email: user.email,
         username: user.username || "",
@@ -80,30 +95,34 @@ export async function saveUserToDatabase(user: {
   }
 }
 
-// 🔵 SIGN IN
+// ================= SIGN IN =================
 export async function signInAccount(user: {
   email: string;
   password: string;
 }) {
   try {
-    const session = await appwriteService.account.createEmailPasswordSession(
+    try {
+      await appwriteService.account.deleteSession("current");
+    } catch {
+      // ignore
+    }
+
+    return await appwriteService.account.createEmailPasswordSession(
       user.email,
       user.password
     );
-
-    return session;
   } catch (error) {
     console.error("SignIn Error:", error);
     throw error;
   }
 }
 
-// 🔍 GET CURRENT USER
+// ================= GET CURRENT USER =================
 export async function getCurrentUser() {
   try {
     const currentAccount = await appwriteService.account.get();
 
-    if (!currentAccount) throw Error;
+    if (!currentAccount) return null;
 
     const currentUser = await appwriteService.databases.listDocuments(
       appwriteConfig.databaseId,
@@ -111,7 +130,9 @@ export async function getCurrentUser() {
       [Query.equal("accountId", currentAccount.$id)]
     );
 
-    if (!currentUser) throw Error;
+    if (!currentUser || currentUser.documents.length === 0) {
+      return null;
+    }
 
     return currentUser.documents[0];
   } catch (error) {
@@ -120,7 +141,7 @@ export async function getCurrentUser() {
   }
 }
 
-// 🔵 SIGN OUT
+// ================= SIGN OUT =================
 export async function signOutAccount() {
   try {
     await appwriteService.account.deleteSession("current");
@@ -130,58 +151,37 @@ export async function signOutAccount() {
   }
 }
 
-// 🔵 CREATE POST (تم تعديلها لضمان توافق الـ Relationship)
-// هذا هو الشكل الذي تستقبل فيه الدالة البيانات
-export async function createPost(post: {
-  userId: string;
-  creatorId: string;
-  caption: string;
-  file: File[];
-  location: string;
-  tags: string[];
-}) {
-  try {
-    // 1. رفع الصورة إلى Storage
-    const uploadedFile = await appwriteService.storage.createFile(
-      appwriteConfig.storageId,
-      ID.unique(),
-      post.file[0]
-    );
+// ================= CREATE POST =================
+export async function createPost(post: INewPost): Promise<IPost> {
+  const uploadedFile = await appwriteService.storage.createFile(
+    appwriteConfig.storageId,
+    ID.unique(),
+    post.file[0]
+  );
 
-    // 2. الحصول على رابط الصورة
-    const fileUrl = appwriteService.storage.getFileView(
-      appwriteConfig.storageId,
-      uploadedFile.$id
-    );
+  const fileUrl = appwriteService.storage.getFilePreview(
+    appwriteConfig.storageId,
+    uploadedFile.$id
+  );
 
-    // 3. إنشاء البوست
-    const newPost = await appwriteService.databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      ID.unique(),
-      {
-        creator: post.creatorId,
-        caption: post.caption,
-        imageUrl: fileUrl.toString(),
-        imageId: uploadedFile.$id,
-        location: post.location,
-        tags: post.tags,
-      },
-      [
-        Permission.read(Role.any()),
-        Permission.update(Role.user(post.userId)),
-        Permission.delete(Role.user(post.userId)),
-      ]
-    );
+  const newPost = await appwriteService.databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    ID.unique(),
+    {
+      creator: post.creatorId,
+      caption: post.caption,
+      imageUrl: fileUrl,
+      imageId: uploadedFile.$id,
+      location: post.location,
+      tags: post.tags,
+    }
+  );
 
-    return newPost;
-  } catch (error) {
-    console.error("خطأ أثناء إنشاء البوست:", error);
-    throw error;
-  }
+  return newPost as unknown as IPost;
 }
 
-// 🔍 GET RECENT POSTS
+// ================= RECENT POSTS =================
 export async function getRecentPosts() {
   try {
     const posts = await appwriteService.databases.listDocuments(
@@ -190,194 +190,147 @@ export async function getRecentPosts() {
       [Query.orderDesc("$createdAt"), Query.limit(20)]
     );
 
-    if (!posts) throw Error;
-
-    return posts;
+    return posts.documents;
   } catch (error) {
-    console.error("Error fetching recent posts:", error);
+    console.error(error);
     throw error;
   }
 }
 
-
-// 🗑️ DELETE POST
-// في src/lib/Appwrite/Api.ts
-
+// ================= DELETE POST =================
 export async function deletePost(postId: string, imageId: string) {
   try {
-    // 1. حذف الصورة أولاً
-    try {
-      await appwriteService.storage.deleteFile(appwriteConfig.storageId, imageId);
-    } catch (error) {
-      console.warn("Image file not found, skipping storage delete");
+    await appwriteService.databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    if (imageId) {
+      await appwriteService.storage.deleteFile(
+        appwriteConfig.storageId,
+        imageId
+      );
     }
 
-    // 2. حذف البوست من قاعدة البيانات
-    const result = await appwriteService.databases.deleteDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId
-    );
-    
-    return result;
+    return { status: "ok" };
   } catch (error) {
-    console.error("خطأ الحذف من الـ Backend:", error);
-    throw error; // هذا سيرمي الخطأ لملف PostCard ليظهر الـ Toast
-  }
-}
-
-export async function getPostById(postId: string) {
-  try {
-    const post = await appwriteService.databases.getDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId
-    );
-
-    if (!post) throw new Error("Post not found");
-
-    return post;
-  } catch (error) {
-    console.error("Error in getPostById:", error);
+    console.error("Delete Post Error:", error);
     throw error;
   }
 }
 
-export async function updatePost(post: {
+// ================= GET POST BY ID =================
+// ================= GET POST BY ID =================
+export async function getPostById(postId: string): Promise<IPost> {
+  const post = await appwriteService.databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    postId
+  );
+
+  // بدلاً من بناء كائن يدوي، نقوم بإرجاع الـ post كما هو
+  // ونتأكد من أنه يطابق النوع IPost باستخدام "as IPost"
+  return post as unknown as IPost;
+}
+
+// ================= UPDATE POST =================
+export async function updatePost(post: IUpdatePost) {
+  let imageId = post.imageId;
+  let imageUrl = post.imageUrl;
+
+  if (post.file.length > 0) {
+    const uploadedFile = await appwriteService.storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      post.file[0]
+    );
+
+    imageId = uploadedFile.$id;
+
+    imageUrl = appwriteService.storage.getFilePreview(
+      appwriteConfig.storageId,
+      uploadedFile.$id
+    );
+
+    await appwriteService.storage.deleteFile(
+      appwriteConfig.storageId,
+      post.imageId
+    );
+  }
+
+  return await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    post.postId,
+    {
+      caption: post.caption,
+      imageUrl,
+      imageId,
+      
+      // ✅ الحل هنا
+      location: post.location ?? "",
+      tags: post.tags ?? [],
+    }
+  );
+}
+
+export async function getCommentsByPost(postId: string): Promise<CommentType[]> {
+  try {
+    const response = await appwriteService.databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.commentsCollectionId,
+      [Query.equal("posts", postId)]
+    );
+
+    return response.documents as unknown as CommentType[];
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export async function createComment({
+  postId,
+  userId,
+  content,
+}: {
   postId: string;
-  imageId: string;
-  imageUrl: string;
-  caption: string;
-  location: string;
-  tags: string[];
-  file: File[];
+  userId: string;
+  content: string;
 }) {
   try {
-    let newImageUrl = post.imageUrl;
-    let newImageId = post.imageId;
-
-    if (post.file.length > 0) {
-      const uploadedFile = await appwriteService.storage.createFile(
-        appwriteConfig.storageId,
-        ID.unique(),
-        post.file[0]
-      );
-      newImageUrl = appwriteService.storage.getFileView(
-        appwriteConfig.storageId,
-        uploadedFile.$id
-      ).toString();
-      newImageId = uploadedFile.$id;
-      
-      await appwriteService.storage.deleteFile(appwriteConfig.storageId, post.imageId);
-    }
-
-    const updatedPost = await appwriteService.databases.updateDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      post.postId,
-      {
-        caption: post.caption,
-        imageUrl: newImageUrl,
-        imageId: newImageId,
-        location: post.location,
-        tags: post.tags,
-      }
-    );
-    return updatedPost;
-  } catch (error) {
-    console.error("Error in updatePost API:", error);
-    throw error;
-  }
-}
-
-export async function getCommentsByPost(postId: string) {
-  const response = await appwriteService.databases.listDocuments(
-    appwriteConfig.databaseId,
-    appwriteConfig.commentsCollectionId,
-    [Query.equal("posts", postId)]
-  );
-  return response.documents;
-}
-
-export async function createComment({ postId, userId, content }: { postId: string, userId: string, content: string }) {
-  try {
-    const newComment = await appwriteService.databases.createDocument(
+    return await appwriteService.databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.commentsCollectionId,
       ID.unique(),
       {
-        content: content,
-        users: userId, // يجب أن يتطابق الاسم مع اسم العمود في Appwrite (users)
-        posts: postId  // يجب أن يتطابق الاسم مع اسم العمود في Appwrite (posts)
+        posts: postId,
+        users: userId,
+        content,
       }
     );
-    return newComment;
   } catch (error) {
-    console.error("Error creating comment:", error);
+    console.error("Create comment error:", error);
+    throw error;
   }
 }
 
+// ================= LIKE POST =================
 export async function likePost(postId: string, likesArray: string[]) {
   try {
     const updatedPost = await appwriteService.databases.updateDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId,
-      { likes: likesArray }
-    );
-    return updatedPost;
-  } catch (error) {
-    console.error(error);
-  }
-}
-
-// 1. دالة حفظ البوست
-export async function savePost(postId: string, userId: string) {
-  try {
-    const newSavedPost = await appwriteService.databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.savesCollectionId,
-      ID.unique(),
       {
-        user: userId, // تأكدي أن هذا هو الـ ID الصحيح للمستخدم
-        post: postId,
+        likes: likesArray,
       }
     );
-    return newSavedPost;
-  } catch (error) {
-    console.error("Error in savePost:", error);
-  }
-}
 
-// 2. دالة إلغاء الحفظ
-export async function deleteSavedPost(savedRecordId: string) {
-  try {
-    await appwriteService.databases.deleteDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.savesCollectionId,
-      savedRecordId
-    );
-    return { status: "ok" };
+    return updatedPost;
   } catch (error) {
-    console.error("Error in deleteSavedPost:", error);
-  }
-}
-
-export async function getSavedPosts(userId: string) {
-  // إذا لم يكن هناك userId، لا تنفذي الاستعلام
-  if (!userId) {
-    console.warn("getSavedPosts called without a valid userId");
-    return [];
-  }
-  
-  try {
-    const savedPosts = await appwriteService.databases.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.savesCollectionId,
-      [Query.equal("user", userId)]
-    );
-    return savedPosts.documents;
-  } catch (error) {
-    console.error("Error in getSavedPosts:", error);
+    console.error("Error liking post:", error);
+    throw error;
   }
 }

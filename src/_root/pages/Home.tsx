@@ -11,6 +11,9 @@ const Home = () => {
     isError: isErrorPosts,
   } = useGetRecentPosts();
 
+  // ✅ دلوقتي posts = array مباشرة
+  const postList = posts ?? [];
+
   return (
     <div className="flex flex-1">
       <div className="home-container">
@@ -19,11 +22,13 @@ const Home = () => {
             Home Feed
           </h2>
 
-          {isPostLoading && !posts ? (
+          {isPostLoading ? (
             <p className="text-light-2">Loading posts...</p>
+          ) : postList.length === 0 ? (
+            <p className="text-light-2">No posts found</p>
           ) : (
             <ul className="flex flex-col flex-1 gap-9 w-full">
-              {posts?.documents.map((post: Models.Document) => (
+              {postList.map((post: Models.Document) => (
                 <li
                   key={post.$id}
                   className="flex justify-center w-full"
@@ -36,7 +41,7 @@ const Home = () => {
 
           {isErrorPosts && (
             <p className="text-red-500">
-              Failed to load posts.
+              Failed to load posts
             </p>
           )}
         </div>

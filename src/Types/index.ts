@@ -1,13 +1,9 @@
-// ===== NAV =====
-export type INavLink = {
-  imgURL: string;
-  route: string;
-  label: string;
-};
+import type { Models } from "appwrite";
+import type React from "react";
 
-// ===== USER (Database Profile) =====
+// ===== USER =====
 export interface IUser {
-  $id: string;      // أضيفي هذا السطر
+  $id: string;
   accountId: string;
   name: string;
   username: string;
@@ -16,7 +12,6 @@ export interface IUser {
   bio: string;
 }
 
-// ===== NEW USER (DB ONLY - NO PASSWORD) =====
 export type INewUser = {
   accountId: string;
   name: string;
@@ -26,66 +21,54 @@ export type INewUser = {
   imageUrl?: string;
 };
 
-// ===== AUTH USER (FOR SIGNUP ONLY) =====
-export type ISignUpUser = {
-  name: string;
-  email: string;
-  password: string;
-  username: string;
-};
-
-// ===== UPDATE USER =====
-export type IUpdateUser = {
-  userId: string;
-  name: string;
-  bio?: string;
-  imageId: string;
-  imageUrl: string;
-  file: File[];
-};
-
 // ===== POST =====
+export interface IPost extends Models.Document {
+  creator: {
+    $id: string;
+    name: string;
+    imageUrl: string;
+    email: string;
+    username: string;
+    bio: string;
+  };
+  caption: string;
+  imageUrl: string;
+  imageId: string;
+  location: string;
+  tags: string[];
+  likes: string[];
+}
+
+// ===== CREATE POST =====
 export type INewPost = {
-  userId: string;
   caption: string;
   file: File[];
   location?: string;
-  tags?: string;
+  tags: string[];
+  
+  creatorId: string; // DB relationship ID
 };
 
+// ===== UPDATE POST =====
 export type IUpdatePost = {
   postId: string;
   caption: string;
   imageId: string;
   imageUrl: string;
   file: File[];
+
   location?: string;
-  tags?: string;
-  username?: string; 
+  tags?: string[];
 };
 
-// ===== AUTH CONTEXT TYPE =====
+// ===== CONTEXT =====
 export type IContextType = {
   user: IUser;
   isLoading: boolean;
-  setUser: React.Dispatch<React.SetStateAction<IUser>>;
   isAuthenticated: boolean;
+
+  setUser: React.Dispatch<React.SetStateAction<IUser>>;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+
   checkAuthUser: () => Promise<boolean>;
 };
-
-export interface IPost {
-  $id: string;            // معرف البوست
-  $createdAt: string;     // تاريخ الإنشاء
-  caption: string;
-  imageUrl: string;
-  imageId: string;        // معرف الصورة في الـ Storage (ضروري للحذف)
-  location: string;
-  tags: string[];
-  creator: {
-    $id: string;          // معرف المستخدم (ضروري للـ Link)
-    name: string;
-    imageUrl: string;
-  };
-}
-
