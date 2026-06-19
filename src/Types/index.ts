@@ -39,6 +39,13 @@ export interface IPost extends Models.Document {
   likes: string[];
 }
 
+// ===== SAVED POST =====
+export type SavedPost = {
+  $id: string;
+  user: string;
+  post: IPost | null;
+};
+
 // ===== CREATE POST =====
 export type INewPost = {
   // userId: string;

@@ -119,6 +119,9 @@ const PostCard = ({ post }: PostCardProps) => {
 
   /* ================= UI ================= */
 console.log(JSON.stringify(post))
+
+// console.log(typeof post.imageUrl);
+// console.log(post.imageUrl);
   
   return (
     <div className="post-card relative">
@@ -224,8 +227,8 @@ console.log(JSON.stringify(post))
 
         <img
           src={post.imageUrl}
-          className="post-card_img"
           alt="post"
+          className="w-full max-h-125 object-cover rounded-xl mt-4"
         />
       </Link>
 

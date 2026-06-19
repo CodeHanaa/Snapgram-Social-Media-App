@@ -1,6 +1,6 @@
 import { ID, Query } from "appwrite";
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
-import type { INewPost, INewUser, IPost, IUpdatePost } from "@/Types";
+import type { INewPost, INewUser, IPost, IUpdatePost} from "@/Types";
 import type { Models } from "appwrite";
 
 /* ================= COMMENT TYPE ================= */
@@ -113,39 +113,52 @@ export async function signOutAccount() {
 
 /* ================= CREATE POST ================= */
 export async function createPost(post: INewPost): Promise<IPost> {
- if (!post.file || post.file.length === 0) {
-  throw new Error("No file selected");
-}
+  try {
+    // رفع الصورة
+    const uploadedFile = await appwriteService.storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      post.file[0]
+    );
 
-const uploadedFile = await appwriteService.storage.createFile(
-  appwriteConfig.storageId,
-  ID.unique(),
-  post.file[0]
-);
-
-  const fileUrl = appwriteService.storage
-  .getFileView(
-    appwriteConfig.storageId,
-    uploadedFile.$id
-  )
-  .toString();
-
-  const newPost = await appwriteService.databases.createDocument(
-    appwriteConfig.databaseId,
-    appwriteConfig.postCollectionId,
-    ID.unique(),
-    {
-      creator: post.creatorId,
-      caption: post.caption,
-      imageUrl: fileUrl,
-      imageId: uploadedFile.$id,
-      location: post.location || "",
-      tags: post.tags || [],
-      likes: [],
+    if (!uploadedFile) {
+      throw Error("File upload failed");
     }
-  );
 
-  return newPost as unknown as IPost;
+    // رابط الصورة الصحيح
+    const fileUrl = appwriteService.storage
+      .getFileView(
+        appwriteConfig.storageId,
+        uploadedFile.$id
+      )
+      .toString();
+
+    // إنشاء البوست
+    const newPost = await appwriteService.databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      ID.unique(),
+      {
+        creator: post.creatorId,
+        caption: post.caption,
+
+        imageUrl: fileUrl,
+
+        imageId: uploadedFile.$id,
+
+        location: post.location,
+
+        tags: post.tags,
+
+        likes: [],
+      }
+    );
+
+    return newPost as unknown as IPost;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
 }
 
 /* ================= RECENT POSTS ================= */
@@ -174,18 +187,15 @@ export async function savePost(postId: string, userId: string) {
 
 // ================= GET SAVED POSTS =================
 export async function getSavedPosts(userId: string) {
-  try {
-    const response = await appwriteService.databases.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.savesCollectionId,
-      [Query.equal("user", userId)]
-    );
+  const response = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.savesCollectionId,
+    [Query.equal("user", userId)]
+  );
 
-    return response.documents;
-  } catch (error) {
-    console.error("Get Saved Posts Error:", error);
-    return [];
-  }
+  console.log("RAW SAVES:", response.documents);
+
+  return response.documents;
 }
 
 // ================= DELETE SAVED POST =================
@@ -224,6 +234,10 @@ export async function deletePost(postId: string, imageId: string) {
 
 /* ================= GET POST BY ID ================= */
 export async function getPostById(postId: string): Promise<IPost> {
+  if (!postId) {
+    throw new Error("Post ID is missing");
+  }
+
   const post = await appwriteService.databases.getDocument(
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
