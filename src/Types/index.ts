@@ -23,7 +23,7 @@ export type INewUser = {
 
 // ===== POST =====
 export interface IPost extends Models.Document {
-  creator: {
+  users: {
     $id: string;
     name: string;
     imageUrl: string;
@@ -31,6 +31,7 @@ export interface IPost extends Models.Document {
     username: string;
     bio: string;
   };
+
   caption: string;
   imageUrl: string;
   imageId: string;
@@ -48,12 +49,11 @@ export type SavedPost = {
 
 // ===== CREATE POST =====
 export type INewPost = {
-  // userId: string;
   creatorId: string;
   caption: string;
   file: File[];
   location?: string;
-  tags: string[]; // 👈 FIX
+  tags: string[];
 };
 
 // ===== UPDATE POST =====
@@ -64,7 +64,7 @@ export type IUpdatePost = {
   imageUrl: string;
   file: File[];
   location?: string;
-  tags: string[]; // 👈 FIX
+  tags: string[];
 };
 
 // ===== CONTEXT =====

@@ -45,7 +45,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [isSending, setIsSending] = useState(false);
 
-  const creator = post.creator ?? null;
+  const creator = post.users ?? null;
 
   /* ================= LOAD COMMENTS ================= */
   useEffect(() => {

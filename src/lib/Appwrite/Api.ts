@@ -114,7 +114,7 @@ export async function signOutAccount() {
 /* ================= CREATE POST ================= */
 export async function createPost(post: INewPost): Promise<IPost> {
   try {
-    // رفع الصورة
+    // 1. رفع الصورة
     const uploadedFile = await appwriteService.storage.createFile(
       appwriteConfig.storageId,
       ID.unique(),
@@ -122,41 +122,35 @@ export async function createPost(post: INewPost): Promise<IPost> {
     );
 
     if (!uploadedFile) {
-      throw Error("File upload failed");
+      throw new Error("File upload failed");
     }
 
-    // رابط الصورة الصحيح
-    const fileUrl = appwriteService.storage
-      .getFileView(
-        appwriteConfig.storageId,
-        uploadedFile.$id
-      )
-      .toString();
+    // 2. الحصول على رابط الصورة
+    const fileUrl = appwriteService.storage.getFilePreview(
+      appwriteConfig.storageId,
+      uploadedFile.$id
+    );
 
-    // إنشاء البوست
+    // 3. إنشاء البوست في الداتابيز
+    // تم تغيير مفتاح "creator" إلى "users" ليتطابق مع الـ Attribute في Appwrite
     const newPost = await appwriteService.databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       ID.unique(),
       {
-        creator: post.creatorId,
+        users: post.creatorId, 
         caption: post.caption,
-
         imageUrl: fileUrl,
-
         imageId: uploadedFile.$id,
-
-        location: post.location,
-
-        tags: post.tags,
-
+        location: post.location ?? "",
+        tags: post.tags ?? [],
         likes: [],
       }
     );
 
     return newPost as unknown as IPost;
   } catch (error) {
-    console.error(error);
+    console.error("CREATE POST ERROR:", error);
     throw error;
   }
 }
@@ -233,18 +227,21 @@ export async function deletePost(postId: string, imageId: string) {
 }
 
 /* ================= GET POST BY ID ================= */
-export async function getPostById(postId: string): Promise<IPost> {
-  if (!postId) {
-    throw new Error("Post ID is missing");
+// في ملف Api.ts
+// في ملف Api.ts
+export async function getPostById(postId: string) {
+  try {
+    const post = await appwriteService.databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    // نقوم بالتحويل هنا مرة واحدة
+    return post as unknown as IPost; 
+  } catch (error) {
+    console.log(error);
   }
-
-  const post = await appwriteService.databases.getDocument(
-    appwriteConfig.databaseId,
-    appwriteConfig.postCollectionId,
-    postId
-  );
-
-  return post as unknown as IPost;
 }
 
 /* ================= UPDATE POST ================= */

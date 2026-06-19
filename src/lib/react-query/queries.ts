@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { INewPost, IUpdatePost } from "@/Types";
 
+
 import {
   getRecentPosts,
   createPost,
@@ -54,7 +55,7 @@ export const useGetPostById = (postId: string) => {
   return useQuery({
     queryKey: ["post", postId],
     queryFn: () => getPostById(postId),
-    enabled: !!postId, // يمنع أي request لو id فاضي
+    enabled: !!postId, // يعمل فقط إذا وجد postId
   });
 };
 

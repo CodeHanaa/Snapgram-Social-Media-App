@@ -1,17 +1,21 @@
 import { Link } from "react-router-dom";
-import type { Models } from "appwrite";
-import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config"; // عدل المسار
+import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 
-type Post = Models.Document & {
+type Post = {
+  $id: string;
   imageId: string;
 };
 
-const GridPostList = ({ posts }: { posts: Post[] }) => {
+type Props = {
+  posts: Post[];
+};
+
+const GridPostList = ({ posts }: Props) => {
   return (
     <ul className="grid-container">
       {posts.map((post) => (
-        <li key={post.$id} className="relative min-w-80 h-80">
-          <Link to={`/posts/${post.$id}`} className="grid-post_link">
+        <li key={post.$id}>
+          <Link to={`/posts/${post.$id}`}>
             <img
               src={
                 post.imageId
@@ -19,7 +23,7 @@ const GridPostList = ({ posts }: { posts: Post[] }) => {
                       appwriteConfig.storageId,
                       post.imageId
                     )
-                  : "/placeholder.png"
+                  : "/assets/icons/profile-placeholder.svg"
               }
               alt="post"
             />
