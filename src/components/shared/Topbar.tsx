@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"; // ملحوظة: تم تعديل المسار هنا لـ react-router-dom لتوحيد المكتبة مع باقي المشروع
+import { Link } from "react-router-dom";
 import { Button } from "../ui/button";
 import { useSignOutAccount } from "@/lib/react-query/QueriesAndMutation";
 import { useEffect } from "react";
@@ -44,13 +44,22 @@ const Topbar = () => {
             />
           </Button>
 
-          <Link to={`/profile/${user.id}`} className="flex-center gap-3 ">
-            <img 
-              src={user.imageUrl || "/assets/icons/profile-placeholder.svg"} 
-              alt="profile" 
-              className="w-8 h-8 rounded-full" 
-            />
-          </Link>
+          {/* تم دمج الشرط هنا داخل الـ return */}
+          {user.$id ? (
+            <Link to={`/profile/${user.$id}`} className="flex-center gap-3">
+              <img
+                src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
+                alt="profile"
+                className="w-8 h-8 rounded-full"
+              />
+            </Link>
+          ) : (
+            <Link to="/sign-in">
+              <Button variant="ghost" className="shad-button_ghost">
+                Login
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </section>

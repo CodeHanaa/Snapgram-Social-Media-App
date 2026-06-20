@@ -23,7 +23,7 @@ export type INewUser = {
 
 // ===== POST =====
 export interface IPost extends Models.Document {
-  users: {
+   creator: string | {
     $id: string;
     name: string;
     imageUrl: string;
@@ -44,7 +44,7 @@ export interface IPost extends Models.Document {
 export type SavedPost = {
   $id: string;
   user: string;
-  post: IPost | null;
+  post: string;
 };
 
 // ===== CREATE POST =====

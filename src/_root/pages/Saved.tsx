@@ -1,13 +1,18 @@
 import { useUserContext } from "@/Context/useAuthContext";
 import { useEffect, useState } from "react";
-
 import { getSavedPosts, getPostById } from "@/lib/Appwrite/Api";
+
 import GridPostList from "@/components/shared/GridPostList ";
 import type { IPost } from "@/Types";
+import type { Models } from "appwrite";
+
+interface ISaveDocument extends Models.Document {
+  post: string;
+  user: string;
+}
 
 const Saved = () => {
   const { user } = useUserContext();
-
   const [savedPosts, setSavedPosts] = useState<IPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,27 +26,30 @@ const Saved = () => {
         const response = await getSavedPosts(user.$id);
 
         if (!response) {
-          setIsLoading(false);
+          setSavedPosts([]);
           return;
         }
 
         const posts = await Promise.all(
-          response.map(async (save: any) => {
-            if (!save.post) return null;
+          response.map(async (save: Models.Document) => {
+            const saveDoc = save as ISaveDocument;
 
-            const postDoc = await getPostById(save.post);
-            
-            // تحويل النتيجة إلى IPost لضمان تطابق النوع
-            return postDoc as IPost;
+            if (!saveDoc.post) return null;
+
+            const postDoc = await getPostById(saveDoc.post);
+
+            return postDoc;
           })
         );
 
-        // فلترة العناصر الفارغة والتأكد من أنها تتبع نوع IPost
-        const validPosts = posts.filter((post): post is IPost => post !== null);
-        
+        const validPosts = posts.filter(
+          (post): post is IPost => post !== null
+        );
+
         setSavedPosts(validPosts);
       } catch (error) {
-        console.error("Error fetching saved posts:", error);
+        console.error("Saved posts error:", error);
+        setSavedPosts([]);
       } finally {
         setIsLoading(false);
       }
@@ -61,12 +69,19 @@ const Saved = () => {
   return (
     <div className="saved-container">
       <div className="flex gap-2 w-full max-w-5xl">
-        <img src="/assets/icons/save.svg" width={36} height={36} alt="save" />
+        <img
+          src="/assets/icons/save.svg"
+          width={36}
+          height={36}
+          alt="save"
+        />
         <h2 className="h3-bold">Saved Posts</h2>
       </div>
 
       {savedPosts.length === 0 ? (
-        <p className="text-light-4 mt-10">No saved posts yet</p>
+        <p className="text-light-4 mt-10">
+          No saved posts yet
+        </p>
       ) : (
         <GridPostList posts={savedPosts} />
       )}
