@@ -70,7 +70,7 @@ const SigninForm = () => {
     try {
       console.log("Starting login...");
 
-      // ✅ تسجيل الدخول
+      //  تسجيل الدخول
       const session =
         await signInAccount({
           email: values.email,
@@ -85,12 +85,12 @@ const SigninForm = () => {
         );
       }
 
-      // ✅ انتظار بسيط لتثبيت الـ session
+      //  انتظار بسيط لتثبيت الـ session
       await new Promise((resolve) =>
         setTimeout(resolve, 500)
       );
 
-      // ✅ التحقق من المستخدم
+      //  التحقق من المستخدم
       const isLoggedIn =
         await checkAuthUser();
 

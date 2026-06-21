@@ -79,7 +79,7 @@ export async function signOutAccount() {
   try {
     await appwriteService.account.deleteSession("current");
   } catch {
-    // حتى لو فشل، امسح الـ local state
+    //delete local state even if delete
   } finally {
     localStorage.removeItem("isLoggedIn");
   }
@@ -277,7 +277,6 @@ export async function updatePost(post: IUpdatePost) {
       post.file[0]
     );
     imageId = uploadedFile.$id;
-    // ✅ getFileView بدل getFilePreview
     imageUrl = appwriteService.storage
       .getFileView(appwriteConfig.storageId, uploadedFile.$id)
       .toString();
@@ -383,4 +382,28 @@ export async function getAllUsers() {
     [Query.orderDesc("$createdAt")]
   );
   return users.documents;
+}
+
+/* ================= LIKED POSTS ================= */
+export async function getLikedPosts(userId: string) {
+  const posts = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    [Query.orderDesc("$createdAt")]
+  );
+
+  posts.documents.forEach((post, i) => {
+    console.log(`Post ${i}:`, post.$id);
+    console.log(`Likes:`, JSON.stringify(post.likes));
+  });
+
+  const likedPosts = posts.documents.filter((post) => {
+    const likes = post.likes;
+    if (!Array.isArray(likes) || likes.length === 0) return false;
+    if (typeof likes[0] === "string") return (likes as string[]).includes(userId);
+    if (typeof likes[0] === "object") return (likes as { $id: string }[]).some((u) => u.$id === userId);
+    return false;
+  });
+
+  return likedPosts;
 }

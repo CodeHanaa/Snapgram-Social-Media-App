@@ -30,7 +30,7 @@ const Home = () => {
         const data = await getAllUsers();
         const filtered = (data as unknown as UserType[])
           .filter((u) => u.$id !== currentUser.$id)
-          .slice(0, 5); // ✅ أول 5 بس
+          .slice(0, 5); 
         setUsers(filtered);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -67,7 +67,7 @@ const Home = () => {
         )}
       </div>
 
-      {/* ===== PEOPLE SIDEBAR (مخفي على موبايل) ===== */}
+      {/* ===== PEOPLE SIDEBAR  ===== */}
       <div className="hidden xl:flex flex-col gap-6 w-72 shrink-0">
         <div className="bg-dark-2 rounded-3xl p-6 flex flex-col gap-5 sticky top-0">
 

@@ -1,4 +1,4 @@
 import { useContext } from "react";
-import { AuthContext } from "@/Context/AuthContext"; // استيراد الـ Context من الملف الأساسي
+import { AuthContext } from "@/Context/AuthContext"; 
 
 export const useUserContext = () => useContext(AuthContext);

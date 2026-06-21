@@ -63,7 +63,6 @@ const Explore = () => {
             <p className="text-light-4 text-center">No posts found</p>
           </div>
         ) : searchValue ? (
-          // ✅ لو بيسرش → عرض PostCard كامل
           <ul className="flex flex-col gap-9 w-full">
             {posts.map((post: Models.Document) => {
               const typedPost = post as unknown as IPost;
@@ -88,7 +87,6 @@ const Explore = () => {
             })}
           </ul>
         ) : (
-          // ✅ لو مفيش search → Grid من الصور
           <>
             <div className="flex justify-between items-center">
               <p className="text-light-2 font-semibold">

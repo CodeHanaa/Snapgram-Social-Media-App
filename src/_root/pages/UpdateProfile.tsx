@@ -81,7 +81,6 @@ const UpdateProfile = () => {
           <h2 className="h3-bold md:h2-bold">Edit Profile</h2>
         </div>
 
-        {/* ✅ ProfileUploader بدل الـ AVATAR section القديمة */}
         <ProfileUploader
           fieldChange={(file: File) => setImageFile(file)}
           mediaUrl={user.imageUrl}
@@ -138,7 +137,6 @@ const UpdateProfile = () => {
               disabled={isLoading}
               className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white transition text-sm font-semibold"
             >
-              {/* ✅ Loader بدل نص Saving */}
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
                   <Loader />

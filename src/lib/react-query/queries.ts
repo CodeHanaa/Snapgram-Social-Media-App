@@ -11,6 +11,7 @@ import {
   likePost,
   searchPosts,
   getAllUsers,
+  getLikedPosts
 
 } from "@/lib/Appwrite/Api";
 
@@ -113,5 +114,14 @@ export const useGetAllUsers = () => {
   return useQuery({
     queryKey: ["users"],
     queryFn: getAllUsers,
+  });
+};
+
+/* ================= LIKED POSTS ================= */
+export const useGetLikedPosts = (userId: string) => {
+  return useQuery({
+    queryKey: ["likedPosts", userId],
+    queryFn: () => getLikedPosts(userId),
+    enabled: !!userId,
   });
 };

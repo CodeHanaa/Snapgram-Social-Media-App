@@ -46,7 +46,7 @@ const AllUsers = () => {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader /> {/* ✅ بدل نص Loading */}
+        <Loader /> 
       </div>
     );
   }
@@ -93,7 +93,7 @@ const AllUsers = () => {
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsers.map((user: UserType) => (
               <li key={user.$id}>
-                <UserCard user={user} /> {/* ✅ بدل الكود المكرر */}
+                <UserCard user={user} /> 
               </li>
             ))}
           </ul>

@@ -114,7 +114,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
 
     let files = values.file || [];
 
-    // ✅ تأكد إن في صورة
+    //make Sure That Is There Image
     if (action === "Create" && files.length === 0) {
       toast.error("Please add a photo");
       return;

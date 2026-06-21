@@ -11,7 +11,7 @@ const LeftSidebar = () => {
   const handleSignOut = () => {
   signOut(undefined, {
     onSuccess: () => navigate("/sign-in"),
-    onError: () => navigate("/sign-in"), // ✅ حتى لو فشل، روّح للـ sign-in
+    onError: () => navigate("/sign-in"), 
   });
 };
 

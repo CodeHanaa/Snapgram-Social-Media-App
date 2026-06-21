@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentAccount) {
         setUser({
-          $id: currentAccount.$id, // ✅ ده الـ document ID في users collection
+          $id: currentAccount.$id, 
           accountId: currentAccount.accountId,
           name: currentAccount.name,
           username: currentAccount.username,
@@ -51,7 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initAuth();
 
-    // cleanup لو الكومبوننت اتفك قبل ما الـ async تخلص
     return () => {
       isMounted = false;
     };

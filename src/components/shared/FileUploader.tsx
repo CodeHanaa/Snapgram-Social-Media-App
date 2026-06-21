@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { type FileWithPath, useDropzone } from "react-dropzone";
 
-// أضفنا mediaUrl للـ props
+// Added mediaUrl to props for existing image handling
 type FileUploaderProps = {
   fieldChange: (files: File[]) => void;
   mediaUrl?: string; 
@@ -10,7 +10,7 @@ type FileUploaderProps = {
 const FileUploader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [file, setFile] = useState<File[]>([]);
-  // قمنا بتهيئة fileUrl ليأخذ قيمة mediaUrl إذا كانت موجودة (في حالة التعديل)
+  // Initialize fileUrl with mediaUrl if provided (for edit mode)
   const [fileUrl, setFileUrl] = useState<string>(mediaUrl || "");
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
@@ -29,12 +29,12 @@ const FileUploader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
       <input {...getInputProps()} className="cursor-pointer" />
 
       {fileUrl ? (
-        // في حال وجود صورة (سواء كانت جديدة أو موجودة مسبقاً)، نعرضها
+        // Display the image if it exists (either new or existing)
         <div className="flex flex-1 justify-center w-full p-5 lg:p-10">
           <img src={fileUrl} alt="uploaded" className="file_uploader-img" />
         </div>
       ) : (
-        // في حال عدم وجود أي صورة، نظهر أيقونة الرفع
+        // Show upload icon if no image is present
         <div className="file_uploader-box flex flex-col items-center justify-center p-10">
           <img src="/assets/icons/file-upload.svg" width={96} height={77} alt="file-upload" />
           <h3 className="base-medium text-light-2 mb-2 mt-6">Drag photo here</h3>

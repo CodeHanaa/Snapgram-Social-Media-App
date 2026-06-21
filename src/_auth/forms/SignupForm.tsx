@@ -43,8 +43,8 @@ const SignupForm = () => {
 
   const onSubmit = async (values: z.infer<typeof signupSchema>) => {
     try {
-      // 1. إنشاء حساب في Appwrite Auth
-      const newAccount = await signUpAccount({
+        // 1. Create user account in Appwrite Auth
+        const newAccount = await signUpAccount({
         email: values.email,
         password: values.password,
         name: values.name,
@@ -56,8 +56,8 @@ const SignupForm = () => {
         return;
       }
 
-      // 2. إنشاء بروفايل في Database
-      const newUser = await createUserAccount({
+        // 2. Create user profile in Database
+        const newUser = await createUserAccount({
         accountId: newAccount.$id,
         name: values.name,
         email: values.email,

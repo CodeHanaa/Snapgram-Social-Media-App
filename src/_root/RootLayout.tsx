@@ -6,20 +6,20 @@ import { Outlet } from "react-router-dom"
 const RootLayout = () => {
   return (
     <div className="w-full md:flex min-h-screen bg-dark-1 text-white">
-      {/* التوب بار يظهر فقط في الموبايل ويختفي في الشاشات الكبيرة */}
+      {/* Topbar: visible only on mobile devices */}
       <div className="md:hidden w-full">
         <Topbar />
       </div>
 
-      {/* السايد بار يظهر فقط في الشاشات الكبيرة */}
+      {/* LeftSidebar: visible only on larger screens */}
       <LeftSidebar />
 
-      {/* المحتوى الرئيسي بياخد باقي المساحة المتاحة */}
+      {/* Main content: takes up the remaining available space */}
       <main className="flex flex-1 h-full min-h-screen overflow-y-auto py-10 px-6 md:px-10 bg-dark-1 custom-scrollbar">
         <Outlet />
       </main>
 
-      {/* البوتوم بار يظهر فقط في الموبايل */}
+      {/* Bottombar: visible only on mobile devices */}
       <div className="md:hidden w-full sticky bottom-0 z-50">
         <Bottombar />
       </div>

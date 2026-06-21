@@ -71,7 +71,7 @@ const PostDetails = () => {
             <img
               src={String(post.imageUrl)}
               alt="post"
-              className="w-full h-full object-cover max-h-[500px] lg:max-h-full"
+              className="w-full h-full object-cover max-h-125 lg:max-h-full"
               onError={(e) => {
                 (e.target as HTMLImageElement).src =
                   "/assets/icons/profile-placeholder.svg";
@@ -147,7 +147,7 @@ const PostDetails = () => {
         </div>
       </div>
 
-      {/* ✅ Confirm Delete Modal */}
+      {/*  Confirm Delete Modal */}
       {showConfirm && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"

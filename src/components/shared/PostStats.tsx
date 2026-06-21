@@ -75,7 +75,7 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
     if (isSaved) {
       setIsSaved(false);
       await deleteSavePost(savedRecordId);
-      // ✅ لو في صفحة Saved، شيل البوست من الـ list
+// Remove the post from the list if on the Saved page
       onUnsave?.(post.$id);
     } else {
       setIsSaved(true);

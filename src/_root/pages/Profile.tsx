@@ -5,6 +5,8 @@ import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import { getRecentPosts } from "@/lib/Appwrite/Api";
 import type { Models } from "appwrite";
 import type { IPost } from "@/Types";
+import Loader from "@/components/shared/Loader";
+import LikedPosts from "@/_root/pages/LikedPosts";
 
 type UserType = Models.Document & {
   name: string;
@@ -21,6 +23,7 @@ const Profile = () => {
   const [profileUser, setProfileUser] = useState<UserType | null>(null);
   const [userPosts, setUserPosts] = useState<IPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"posts" | "liked">("posts");
 
   const isOwnProfile = currentUser.$id === id;
 
@@ -56,7 +59,7 @@ const Profile = () => {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-light-4">Loading...</p>
+        <Loader />
       </div>
     );
   }
@@ -73,7 +76,7 @@ const Profile = () => {
     <div className="flex flex-1 overflow-scroll py-10 px-5 md:p-14 custom-scrollbar">
       <div className="flex flex-col w-full max-w-5xl mx-auto gap-8">
 
-        {/* ✅ BACK */}
+        {/* BACK */}
         <button
           onClick={() => navigate("/")}
           className="flex items-center gap-2 text-light-2 hover:text-white transition w-fit"
@@ -119,43 +122,73 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* POSTS GRID */}
+        {/* TABS */}
         <div>
-          <h3 className="text-white font-semibold text-lg mb-4">
-            {isOwnProfile ? "My Posts" : `${profileUser.name}'s Posts`}
-          </h3>
+          <div className="flex gap-6 border-b border-dark-4 mb-6">
+            <button
+              onClick={() => setActiveTab("posts")}
+              className={`pb-3 text-sm font-medium transition border-b-2 ${
+                activeTab === "posts"
+                  ? "border-purple-500 text-white"
+                  : "border-transparent text-light-3 hover:text-white"
+              }`}
+            >
+              {isOwnProfile ? "My Posts" : `${profileUser.name}'s Posts`}
+            </button>
 
-          {userPosts.length === 0 ? (
-            <p className="text-light-4 text-center mt-10">No posts yet</p>
-          ) : (
-            <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {userPosts.map((post) => (
-                <li
-                  key={post.$id}
-                  className="relative w-full aspect-square rounded-2xl overflow-hidden group"
-                >
-                  <Link to={`/posts/${post.$id}`} className="w-full h-full block">
-                    <img
-                      src={String(post.imageUrl)}
-                      alt="post"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "/assets/icons/profile-placeholder.svg";
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
-                      <div className="flex items-center gap-1 text-white text-sm">
-                        <img src="/assets/icons/like.svg" className="w-5 h-5" alt="likes" />
-                        <span>{post.likes?.length || 0}</span>
+            {/* Liked Posts tab — only visible on own profile */}
+            {isOwnProfile && (
+              <button
+                onClick={() => setActiveTab("liked")}
+                className={`pb-3 text-sm font-medium transition border-b-2 ${
+                  activeTab === "liked"
+                    ? "border-purple-500 text-white"
+                    : "border-transparent text-light-3 hover:text-white"
+                }`}
+              >
+                Liked Posts
+              </button>
+            )}
+          </div>
+
+          {/* POSTS TAB */}
+          {activeTab === "posts" && (
+            userPosts.length === 0 ? (
+              <p className="text-light-4 text-center mt-10">No posts yet</p>
+            ) : (
+              <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {userPosts.map((post) => (
+                  <li
+                    key={post.$id}
+                    className="relative w-full aspect-square rounded-2xl overflow-hidden group"
+                  >
+                    <Link to={`/posts/${post.$id}`} className="w-full h-full block">
+                      <img
+                        src={String(post.imageUrl)}
+                        alt="post"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/assets/icons/profile-placeholder.svg";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
+                        <div className="flex items-center gap-1 text-white text-sm">
+                          <img src="/assets/icons/like.svg" className="w-5 h-5" alt="likes" />
+                          <span>{post.likes?.length || 0}</span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )
           )}
+
+          {/* LIKED POSTS TAB */}
+          {activeTab === "liked" && <LikedPosts />}
         </div>
+
       </div>
     </div>
   );

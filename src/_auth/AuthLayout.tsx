@@ -9,12 +9,13 @@ const AuthLayout = () => {
         <Navigate to="/" />
       ) : (
         <div className="flex h-screen w-full bg-black">
-          {/* الفورم على الشمال */}
+          {/* Form on the left */}
+
           <section className="flex flex-1 justify-center items-center flex-col py-10 ">
             <Outlet />
           </section>
 
-          {/* الصورة على اليمين */}
+          {/* Image on the right */}
           <img
             src="/assets/images/side-img.png"
             alt="logo"
