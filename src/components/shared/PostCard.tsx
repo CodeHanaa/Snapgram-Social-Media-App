@@ -77,7 +77,7 @@ const PostCard = ({ post, savedRecordId, onUnsave }: PostCardProps) => {
       <Link to={`/posts/${post.$id}`}>
         <img
           src={String(post.imageUrl)}
-          className="w-full rounded-xl mt-3 object-cover max-h-[400px]"
+          className="w-full rounded-xl mt-3 object-cover max-h-100"
           alt="post"
           onError={(e) => {
             (e.target as HTMLImageElement).src =

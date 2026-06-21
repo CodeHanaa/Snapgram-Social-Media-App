@@ -15,7 +15,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (currentAccount) {
         setUser({
-          $id: currentAccount.$id,
+          $id: currentAccount.$id, // ✅ ده الـ document ID في users collection
           accountId: currentAccount.accountId,
           name: currentAccount.name,
           username: currentAccount.username,

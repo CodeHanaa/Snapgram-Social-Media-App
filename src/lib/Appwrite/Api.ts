@@ -108,31 +108,35 @@ export async function getCurrentUser() {
 
 /* ================= POSTS ================= */
 export async function createPost(post: INewPost) {
-  const uploadedFile = await appwriteService.storage.createFile(
-    appwriteConfig.storageId,
-    ID.unique(),
-    post.file[0]
-  );
+  try {
+    const uploadedFile = await appwriteService.storage.createFile(
+      appwriteConfig.storageId,
+      ID.unique(),
+      post.file[0]
+    );
 
-  // ✅ getFileView بدل getFilePreview (Preview محتاج upgrade)
-  const imageUrl = appwriteService.storage
-    .getFileView(appwriteConfig.storageId, uploadedFile.$id)
-    .toString();
+    const imageUrl = appwriteService.storage
+      .getFileView(appwriteConfig.storageId, uploadedFile.$id)
+      .toString();
 
-  return await appwriteService.databases.createDocument(
-    appwriteConfig.databaseId,
-    appwriteConfig.postCollectionId,
-    ID.unique(),
-    {
-      creator: post.creatorId,
-      caption: post.caption,
-      imageUrl,
-      imageId: uploadedFile.$id,
-      location: post.location || "",
-      tags: post.tags || [],
-      likes: [],
-    }
-  );
+    return await appwriteService.databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      ID.unique(),
+      {
+        creator: post.creatorId,
+        caption: post.caption,
+        imageUrl,
+        imageId: uploadedFile.$id,
+        location: post.location || "",
+        tags: post.tags || [],
+        likes: [],
+      }
+    );
+  } catch (error) {
+    console.error("createPost error:", error);
+    throw error;
+  }
 }
 
 export async function getRecentPosts() {
@@ -331,4 +335,52 @@ export async function likePost(postId: string, likesArray: string[]) {
     postId,
     { likes: likesArray }
   );
+}
+
+/* ================= SEARCH POSTS ================= */
+export async function searchPosts(searchTerm: string) {
+  const posts = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    [Query.search("caption", searchTerm)]
+  );
+
+  const postsWithCreator = await Promise.all(
+    posts.documents.map(async (post) => {
+      try {
+        const creatorRaw = post.creator as unknown;
+        if (
+          creatorRaw &&
+          typeof creatorRaw === "object" &&
+          "documents" in (creatorRaw as object)
+        ) {
+          const creatorList = (creatorRaw as { documents: unknown[] }).documents;
+          return { ...post, creator: creatorList[0] };
+        }
+        if (typeof creatorRaw === "string") {
+          const creator = await appwriteService.databases.getDocument(
+            appwriteConfig.databaseId,
+            appwriteConfig.userCollectionId,
+            creatorRaw
+          );
+          return { ...post, creator };
+        }
+        return post;
+      } catch {
+        return post;
+      }
+    })
+  );
+
+  return postsWithCreator;
+}
+
+/* ================= GET ALL USERS ================= */
+export async function getAllUsers() {
+  const users = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    [Query.orderDesc("$createdAt")]
+  );
+  return users.documents;
 }

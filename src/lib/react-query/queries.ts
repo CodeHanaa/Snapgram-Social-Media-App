@@ -9,7 +9,11 @@ import {
   getPostById,
   updatePost,
   likePost,
+  searchPosts,
+  getAllUsers,
+
 } from "@/lib/Appwrite/Api";
+
 
 /* ================= POSTS ================= */
 
@@ -92,5 +96,22 @@ export const useLikePost = () => {
       qc.invalidateQueries({ queryKey: ["post", variables.postId] });
       qc.invalidateQueries({ queryKey: ["posts"] });
     },
+  });
+};
+
+//=====useSearchPosts==
+export const useSearchPosts = (searchTerm: string) => {
+  return useQuery({
+    queryKey: ["search", searchTerm],
+    queryFn: () => searchPosts(searchTerm),
+    enabled: !!searchTerm,
+  });
+};
+
+//====people
+export const useGetAllUsers = () => {
+  return useQuery({
+    queryKey: ["users"],
+    queryFn: getAllUsers,
   });
 };

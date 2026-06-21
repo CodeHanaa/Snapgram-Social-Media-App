@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useEffect } from "react";
+import { toast } from "sonner";
 import FileUploader from "../shared/FileUploader";
 import { useCreatePost, useUpdatePost } from "@/lib/react-query/queries";
 import { useUserContext } from "@/Context/useAuthContext";
@@ -11,13 +13,15 @@ const PostSchema = z.object({
   caption: z.string().min(5),
   file: z.custom<File[]>().optional(),
   location: z.string().min(1),
-  tags: z.string(), // خليها string في الفورم فقط
+  tags: z.string(),
 });
 
 type PostFormProps = {
   post?: IPost;
-  action: 'Create' | 'Update';
+  action: "Create" | "Update";
 };
+
+const DRAFT_KEY = "post_draft";
 
 const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
@@ -26,54 +30,94 @@ const PostForm = ({ post, action }: PostFormProps) => {
   const { mutateAsync: createPost, isPending: isLoadingCreate } = useCreatePost();
   const { mutateAsync: updatePost, isPending: isLoadingUpdate } = useUpdatePost();
 
+  const savedDraft =
+    action === "Create"
+      ? JSON.parse(localStorage.getItem(DRAFT_KEY) || "{}")
+      : {};
+
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors }
+    watch,
+    formState: { errors },
   } = useForm<z.infer<typeof PostSchema>>({
     resolver: zodResolver(PostSchema),
     defaultValues: {
-      caption: post ? post?.caption : "",
+      caption: post?.caption ?? savedDraft.caption ?? "",
       file: [],
-      location: post ? post?.location : "",
-      tags: post ? post.tags.join(",") : "",
+      location: post?.location ?? savedDraft.location ?? "",
+      tags: post ? post.tags.join(",") : savedDraft.tags ?? "",
     },
   });
 
+  const watchedValues = watch(["caption", "location", "tags"]);
+
+  useEffect(() => {
+    if (action === "Create") {
+      const [caption, location, tags] = watchedValues;
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ caption, location, tags })
+      );
+    }
+  }, [watchedValues, action]);
+
   const onSubmit = async (values: z.infer<typeof PostSchema>) => {
-  const tagsArray = values.tags
-    ? values.tags.split(",").map((tag) => tag.trim())
-    : [];
+    const tagsArray = values.tags
+      ? values.tags.split(",").map((tag) => tag.trim())
+      : [];
 
-  const files = values.file || [];
+    const files = values.file || [];
 
-  const basePayload = {
-    caption: values.caption,
-    location: values.location,
-    file: files,
-    tags: tagsArray, // 👈 هنا المهم
-    creatorId: user.$id,
+    // ✅ تأكد إن في صورة
+    if (action === "Create" && files.length === 0) {
+      toast.error("Please add a photo");
+      return;
+    }
+
+    const basePayload = {
+      caption: values.caption,
+      location: values.location,
+      file: files,
+      tags: tagsArray,
+      creatorId: user.$id,
+    };
+
+    try {
+      if (action === "Update" && post) {
+        const updatedPost = await updatePost({
+          ...basePayload,
+          postId: post.$id,
+          imageId: post.imageId,
+          imageUrl: post.imageUrl,
+        });
+        if (updatedPost) {
+          toast.success("Post updated!");
+          navigate(`/posts/${post.$id}`);
+        }
+        return;
+      }
+
+      // ✅ toast للانتظار
+      toast.loading("Uploading post...", { id: "create-post" });
+
+      const newPost = await createPost(basePayload);
+
+      if (newPost) {
+        toast.success("Post created!", { id: "create-post" });
+        localStorage.removeItem(DRAFT_KEY);
+        navigate(`/posts/${newPost.$id}`);
+      }
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Failed. Please check your connection and try again.", {
+        id: "create-post",
+      });
+    }
   };
 
-  if (action === "Update" && post) {
-    const updatedPost = await updatePost({
-      ...basePayload,
-      postId: post.$id,
-      imageId: post.imageId,
-      imageUrl: post.imageUrl,
-    });
-
-    if (updatedPost) navigate(`/posts/${post.$id}`);
-    return;
-  }
-
-  const newPost = await createPost(basePayload);
-
-  if (newPost) {
-    navigate(`/posts/${newPost.$id}`);
-  }
-};
+  const isLoading = isLoadingCreate || isLoadingUpdate;
 
   return (
     <form
@@ -95,9 +139,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
         <label className="text-white">Add Photos</label>
         <FileUploader
           fieldChange={(files: File[]) =>
-            setValue("file", files, {
-              shouldValidate: true,
-            })
+            setValue("file", files, { shouldValidate: true })
           }
           mediaUrl={post?.imageUrl}
         />
@@ -108,10 +150,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
 
       <div className="flex flex-col gap-2">
         <label className="text-white">Add Location</label>
-        <input
-          className="shad-input"
-          {...register("location")}
-        />
+        <input className="shad-input" {...register("location")} />
         {errors.location && (
           <p className="text-red-500 text-sm">{errors.location.message}</p>
         )}
@@ -126,22 +165,45 @@ const PostForm = ({ post, action }: PostFormProps) => {
         />
       </div>
 
+      {/* Draft restored */}
+      {action === "Create" && savedDraft.caption && (
+        <div className="flex justify-between items-center bg-dark-3 rounded-xl px-4 py-2">
+          <p className="text-light-3 text-sm">Draft restored</p>
+          <button
+            type="button"
+            className="text-red-400 text-sm hover:text-red-300 transition"
+            onClick={() => {
+              localStorage.removeItem(DRAFT_KEY);
+              window.location.reload();
+            }}
+          >
+            Clear draft
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-4 items-center justify-end">
         <button
           type="button"
           className="shad-button_dark_4"
           onClick={() => navigate(-1)}
+          disabled={isLoading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isLoadingCreate || isLoadingUpdate}
-          className="shad-button_primary whitespace-nowrap"
+          disabled={isLoading}
+          className="shad-button_primary whitespace-nowrap flex items-center gap-2"
         >
-          {isLoadingCreate || isLoadingUpdate
-            ? "Loading..."
-            : `${action} Post`}
+          {isLoading ? (
+            <>
+              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Uploading...
+            </>
+          ) : (
+            `${action} Post`
+          )}
         </button>
       </div>
     </form>
