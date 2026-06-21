@@ -2,18 +2,21 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useUserContext } from "@/Context/useAuthContext";
 import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
+import { ID } from "appwrite";
 import { toast } from "sonner";
+import ProfileUploader from "@/components/shared/ProfileUploader"; // ✅ جديد
+import Loader from "@/components/shared/Loader"; // ✅ جديد
 
 const UpdateProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, setUser } = useUserContext();
 
-  // ✅ بدل useEffect، خلي الـ initial value من الـ user مباشرة
   const [name, setName] = useState(user.name || "");
   const [username, setUsername] = useState(user.username || "");
   const [bio, setBio] = useState(user.bio || "");
   const [isLoading, setIsLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null); // ✅ الـ ProfileUploader هيتكلم معاه
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +24,27 @@ const UpdateProfile = () => {
 
     setIsLoading(true);
     try {
+      let imageUrl = user.imageUrl;
+
+      if (imageFile) {
+        const uploadedFile = await appwriteService.storage.createFile(
+          appwriteConfig.storageId,
+          ID.unique(),
+          imageFile
+        );
+
+        const fileUrl = appwriteService.storage.getFileView(
+          appwriteConfig.storageId,
+          uploadedFile.$id,
+        );
+        imageUrl = fileUrl.toString();
+      }
+
       const updated = await appwriteService.databases.updateDocument(
         appwriteConfig.databaseId,
         appwriteConfig.userCollectionId,
         id,
-        { name, username, bio }
+        { name, username, bio, imageUrl }
       );
 
       setUser((prev) => ({
@@ -33,6 +52,7 @@ const UpdateProfile = () => {
         name: updated.name,
         username: updated.username,
         bio: updated.bio,
+        imageUrl: updated.imageUrl,
       }));
 
       toast.success("Profile updated!");
@@ -51,7 +71,6 @@ const UpdateProfile = () => {
 
         {/* HEADER */}
         <div className="flex items-center gap-3">
-          {/* ✅ زرار Back */}
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-light-2 hover:text-white transition"
@@ -62,18 +81,11 @@ const UpdateProfile = () => {
           <h2 className="h3-bold md:h2-bold">Edit Profile</h2>
         </div>
 
-        {/* AVATAR */}
-        <div className="flex items-center gap-4">
-          <img
-            src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
-            alt="profile"
-            className="w-20 h-20 rounded-full object-cover border-2 border-dark-4"
-          />
-          <div>
-            <p className="text-white font-semibold">{user.name}</p>
-            <p className="text-light-3 text-sm">@{user.username}</p>
-          </div>
-        </div>
+        {/* ✅ ProfileUploader بدل الـ AVATAR section القديمة */}
+        <ProfileUploader
+          fieldChange={(file: File) => setImageFile(file)}
+          mediaUrl={user.imageUrl}
+        />
 
         {/* FORM */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -126,9 +138,18 @@ const UpdateProfile = () => {
               disabled={isLoading}
               className="flex-1 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white transition text-sm font-semibold"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {/* ✅ Loader بدل نص Saving */}
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader />
+                  Saving...
+                </span>
+              ) : (
+                "Save Changes"
+              )}
             </button>
           </div>
+
         </form>
       </div>
     </div>

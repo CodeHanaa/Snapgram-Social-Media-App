@@ -75,7 +75,7 @@ const Profile = () => {
 
         {/* ✅ BACK */}
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-light-2 hover:text-white transition w-fit"
         >
           <img src="/assets/icons/back.svg" alt="back" className="w-5 h-5" />

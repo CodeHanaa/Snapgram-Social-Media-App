@@ -23,6 +23,50 @@ type PostFormProps = {
 
 const DRAFT_KEY = "post_draft";
 
+// ✅ دالة ضغط الصورة
+const compressImage = (file: File, maxWidth = 1000, quality = 0.7): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const PostForm = ({ post, action }: PostFormProps) => {
   const navigate = useNavigate();
   const { user } = useUserContext();
@@ -68,12 +112,18 @@ const PostForm = ({ post, action }: PostFormProps) => {
       ? values.tags.split(",").map((tag) => tag.trim())
       : [];
 
-    const files = values.file || [];
+    let files = values.file || [];
 
     // ✅ تأكد إن في صورة
     if (action === "Create" && files.length === 0) {
       toast.error("Please add a photo");
       return;
+    }
+
+    // ✅ اضغط الصور قبل الرفع
+    if (files.length > 0) {
+      toast.loading("Compressing image...", { id: "create-post" });
+      files = await Promise.all(files.map((file) => compressImage(file)));
     }
 
     const basePayload = {
@@ -99,7 +149,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
         return;
       }
 
-      // ✅ toast للانتظار
       toast.loading("Uploading post...", { id: "create-post" });
 
       const newPost = await createPost(basePayload);

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { getAllUsers } from "@/lib/Appwrite/Api";
 import { useUserContext } from "@/Context/useAuthContext";
 import type { Models } from "appwrite";
+import UserCard from "@/components/shared/UserCard";
+import Loader from "@/components/shared/Loader";
 
 type UserType = Models.Document & {
   name: string;
@@ -21,7 +22,6 @@ const AllUsers = () => {
     const fetchUsers = async () => {
       try {
         const data = await getAllUsers();
-        // ✅ استبعد المستخدم الحالي من القائمة
         const filtered = (data as unknown as UserType[]).filter(
           (u) => u.$id !== currentUser.$id
         );
@@ -46,7 +46,7 @@ const AllUsers = () => {
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <p className="text-light-4">Loading...</p>
+        <Loader /> {/* ✅ بدل نص Loading */}
       </div>
     );
   }
@@ -58,18 +58,12 @@ const AllUsers = () => {
         {/* HEADER */}
         <div className="flex flex-col gap-1">
           <h2 className="h3-bold md:h2-bold">All People</h2>
-          <p className="text-light-3 text-sm">
-            Discover and connect with others
-          </p>
+          <p className="text-light-3 text-sm">Discover and connect with others</p>
         </div>
 
         {/* SEARCH */}
         <div className="flex gap-3 items-center bg-dark-3 rounded-xl px-4 py-3 w-full">
-          <img
-            src="/assets/icons/search.svg"
-            alt="search"
-            className="w-5 h-5 opacity-60"
-          />
+          <img src="/assets/icons/search.svg" alt="search" className="w-5 h-5 opacity-60" />
           <input
             type="text"
             placeholder="Search by name or username..."
@@ -79,11 +73,7 @@ const AllUsers = () => {
           />
           {searchValue && (
             <button onClick={() => setSearchValue("")}>
-              <img
-                src="/assets/icons/close.svg"
-                alt="clear"
-                className="w-4 h-4 opacity-60 hover:opacity-100 transition"
-              />
+              <img src="/assets/icons/close.svg" alt="clear" className="w-4 h-4 opacity-60 hover:opacity-100 transition" />
             </button>
           )}
         </div>
@@ -96,45 +86,19 @@ const AllUsers = () => {
         {/* USERS GRID */}
         {filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center mt-10 gap-3">
-            <img
-              src="/assets/icons/people.svg"
-              alt="no users"
-              className="w-16 h-16 opacity-20"
-            />
+            <img src="/assets/icons/people.svg" alt="no users" className="w-16 h-16 opacity-20" />
             <p className="text-light-4 text-center">No users found</p>
           </div>
         ) : (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsers.map((user: UserType) => (
               <li key={user.$id}>
-                <Link
-                  to={`/profile/${user.$id}`}
-                  className="flex flex-col items-center gap-3 bg-dark-2 rounded-2xl p-6 hover:bg-dark-3 transition text-center"
-                >
-                  <img
-                    src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
-                    alt={user.name}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-dark-4"
-                  />
-                  <div className="flex flex-col items-center gap-1">
-                    <p className="text-white font-semibold text-base">
-                      {user.name}
-                    </p>
-                    <p className="text-light-3 text-sm">@{user.username}</p>
-                    {user.bio && (
-                      <p className="text-light-4 text-xs mt-1 line-clamp-2">
-                        {user.bio}
-                      </p>
-                    )}
-                  </div>
-                  <span className="mt-2 px-6 py-1.5 rounded-full bg-primary-500 text-white text-sm font-medium hover:bg-purple-700 transition">
-                    View Profile
-                  </span>
-                </Link>
+                <UserCard user={user} /> {/* ✅ بدل الكود المكرر */}
               </li>
             ))}
           </ul>
         )}
+
       </div>
     </div>
   );
