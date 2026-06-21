@@ -36,8 +36,12 @@ const PostCard = ({ post, savedRecordId, onUnsave }: PostCardProps) => {
 
   return (
     <div className="post-card">
+
+      {/* ===== HEADER ===== */}
       <div className="flex-between">
-        <Link to={`/profile/${creatorId}`} className="flex items-center gap-3">
+
+        {/* creator → profile */}
+        <Link to={`/posts/${post.$id}`} className="flex items-center gap-3">
           <img
             src={creator?.imageUrl || "/assets/icons/profile-placeholder.svg"}
             className="w-12 h-12 rounded-full"
@@ -51,6 +55,7 @@ const PostCard = ({ post, savedRecordId, onUnsave }: PostCardProps) => {
           </div>
         </Link>
 
+        {/* edit / delete */}
         {user?.$id === creatorId && (
           <div className="flex gap-3">
             <Link to={`/update-post/${post.$id}`}>
@@ -63,18 +68,25 @@ const PostCard = ({ post, savedRecordId, onUnsave }: PostCardProps) => {
         )}
       </div>
 
-      <p className="mt-3 text-white">{post.caption}</p>
+      {/* ===== CAPTION → post details ===== */}
+      <Link to={`/posts/${post.$id}`}>
+        <p className="mt-3 text-white">{post.caption}</p>
+      </Link>
 
-      <img
-        src={String(post.imageUrl)}
-        className="w-full rounded-xl mt-3 object-cover max-h-[400px]"
-        alt="post"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src =
-            "/assets/icons/profile-placeholder.svg";
-        }}
-      />
+      {/* ===== IMAGE → post details ===== */}
+      <Link to={`/posts/${post.$id}`}>
+        <img
+          src={String(post.imageUrl)}
+          className="w-full rounded-xl mt-3 object-cover max-h-[400px]"
+          alt="post"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src =
+              "/assets/icons/profile-placeholder.svg";
+          }}
+        />
+      </Link>
 
+      {/* ===== STATS ===== */}
       <div className="mt-4">
         <PostStats
           post={post}
