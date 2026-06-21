@@ -21,39 +21,27 @@ export function AuthProvider({
   // ✅ CHECK AUTH USER
   // ✅ CHECK AUTH USER (النسخة المعدلة والهادئة)
   const checkAuthUser = async (): Promise<boolean> => {
-    setIsLoading(true);
-
-    try {
-      const currentAccount = await getCurrentUser();
-
-      if (currentAccount) {
-        setUser({
-          $id: currentAccount.$id,
-          accountId: currentAccount.accountId,
-          name: currentAccount.name,
-          username: currentAccount.username,
-          email: currentAccount.email,
-          imageUrl: currentAccount.imageUrl,
-          bio: currentAccount.bio,
-        });
-
-        setIsAuthenticated(true);
-        return true;
-      }
-
-      setIsAuthenticated(false);
-      return false;
-    } catch (error) {
-      console.log(error)
-      // تم إزالة console.error هنا لأننا لا نريد طباعة خطأ الـ 401 
-      // الذي يحدث طبيعياً عندما لا يكون المستخدم مسجلاً
-
-      setIsAuthenticated(false);
-      return false;
-    } finally {
-      setIsLoading(false);
+  setIsLoading(true);
+  try {
+    const currentAccount = await getCurrentUser();
+    if (currentAccount) {
+      // ... (تحديث الحالة كما هو)
+      setIsAuthenticated(true);
+      return true;
     }
-  };
+    // إذا لم يوجد حساب، يجب إجبار الحالة على "عدم التوثيق"
+    setIsAuthenticated(false);
+    setUser(INITIAL_USER); 
+    return false;
+  } catch (error) {
+    console.log(error)
+    setIsAuthenticated(false);
+    setUser(INITIAL_USER);
+    return false;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // ✅ INIT AUTH
   useEffect(() => {
