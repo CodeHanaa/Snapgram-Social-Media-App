@@ -8,8 +8,7 @@ type FileUploaderProps = {
 };
 
 const FileUploader = ({ fieldChange, mediaUrl }: FileUploaderProps) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [file, setFile] = useState<File[]>([]);
+  const [/*file*/, setFile] = useState<File[]>([]);
   // Initialize fileUrl with mediaUrl if provided (for edit mode)
   const [fileUrl, setFileUrl] = useState<string>(mediaUrl || "");
 
