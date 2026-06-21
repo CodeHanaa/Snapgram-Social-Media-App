@@ -2,18 +2,18 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { sidebarLinks } from "@/constants";
 import { useUserContext } from "@/Context/useAuthContext";
 import { useSignOutAccount } from "@/lib/react-query/QueriesAndMutation";
-import { useEffect } from "react";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const { user } = useUserContext();
-  const { mutate: signOut, isSuccess } = useSignOutAccount();
+  const { mutate: signOut } = useSignOutAccount();
 
-  useEffect(() => {
-    if (isSuccess) {
-      navigate(0);
-    }
-  }, [isSuccess, navigate]);
+  const handleSignOut = () => {
+  signOut(undefined, {
+    onSuccess: () => navigate("/sign-in"),
+    onError: () => navigate("/sign-in"), // ✅ حتى لو فشل، روّح للـ sign-in
+  });
+};
 
   if (!user) return null;
 
@@ -31,7 +31,7 @@ const LeftSidebar = () => {
         </Link>
 
         {/* Profile */}
-        <Link to={`/profile/${user.id}`} className="flex items-center gap-3">
+        <Link to={`/profile/${user.$id}`} className="flex items-center gap-3">
           <img
             src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
             alt="Profile"
@@ -63,7 +63,6 @@ const LeftSidebar = () => {
                   alt={link.label}
                   className="w-5 h-5 transition group-hover:invert"
                 />
-
                 {link.label}
               </NavLink>
             </li>
@@ -73,7 +72,7 @@ const LeftSidebar = () => {
 
       {/* Logout */}
       <button
-        onClick={() => signOut()}
+        onClick={handleSignOut}
         className="flex gap-3 items-center px-4 py-2 mt-4 rounded-lg hover:bg-primary-500 transition group"
       >
         <img

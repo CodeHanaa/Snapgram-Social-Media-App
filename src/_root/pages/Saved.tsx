@@ -1,8 +1,7 @@
 import { useUserContext } from "@/Context/useAuthContext";
 import { useEffect, useState } from "react";
 import { getSavedPosts, getPostById } from "@/lib/Appwrite/Api";
-
-import GridPostList from "@/components/shared/GridPostList ";
+import PostCard from "@/components/shared/PostCard";
 import type { IPost } from "@/Types";
 import type { Models } from "appwrite";
 
@@ -11,9 +10,14 @@ interface ISaveDocument extends Models.Document {
   user: string;
 }
 
+type SavedPostWithRecord = {
+  post: IPost;
+  savedRecordId: string;
+};
+
 const Saved = () => {
   const { user } = useUserContext();
-  const [savedPosts, setSavedPosts] = useState<IPost[]>([]);
+  const [savedPosts, setSavedPosts] = useState<SavedPostWithRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -22,31 +26,22 @@ const Saved = () => {
     const fetchSavedPosts = async () => {
       try {
         setIsLoading(true);
-
         const response = await getSavedPosts(user.$id);
+        if (!response) { setSavedPosts([]); return; }
 
-        if (!response) {
-          setSavedPosts([]);
-          return;
-        }
-
-        const posts = await Promise.all(
+        const results = await Promise.all(
           response.map(async (save: Models.Document) => {
             const saveDoc = save as ISaveDocument;
-
             if (!saveDoc.post) return null;
-
-            const postDoc = await getPostById(saveDoc.post);
-
-            return postDoc;
+            const post = await getPostById(saveDoc.post);
+            if (!post) return null;
+            return { post, savedRecordId: saveDoc.$id };
           })
         );
 
-        const validPosts = posts.filter(
-          (post): post is IPost => post !== null
+        setSavedPosts(
+          results.filter((r): r is SavedPostWithRecord => r !== null)
         );
-
-        setSavedPosts(validPosts);
       } catch (error) {
         console.error("Saved posts error:", error);
         setSavedPosts([]);
@@ -58,6 +53,11 @@ const Saved = () => {
     fetchSavedPosts();
   }, [user?.$id]);
 
+  // ✅ لما المستخدم يلغي الحفظ، شيل البوست من الـ list فوراً
+  const handleUnsave = (postId: string) => {
+    setSavedPosts((prev) => prev.filter((item) => item.post.$id !== postId));
+  };
+
   if (isLoading) {
     return (
       <div className="flex-center w-full h-full">
@@ -67,24 +67,29 @@ const Saved = () => {
   }
 
   return (
-    <div className="saved-container">
-      <div className="flex gap-2 w-full max-w-5xl">
-        <img
-          src="/assets/icons/save.svg"
-          width={36}
-          height={36}
-          alt="save"
-        />
-        <h2 className="h3-bold">Saved Posts</h2>
-      </div>
+    <div className="flex flex-1 overflow-scroll py-10 px-5 md:p-14 custom-scrollbar">
+      <div className="flex flex-col w-full max-w-screen-sm mx-auto gap-9">
+        <div className="flex gap-2 items-center">
+          <img src="/assets/icons/save.svg" width={36} height={36} alt="save" />
+          <h2 className="h3-bold">Saved Posts</h2>
+        </div>
 
-      {savedPosts.length === 0 ? (
-        <p className="text-light-4 mt-10">
-          No saved posts yet
-        </p>
-      ) : (
-        <GridPostList posts={savedPosts} />
-      )}
+        {savedPosts.length === 0 ? (
+          <p className="text-light-4 mt-10 text-center">No saved posts yet</p>
+        ) : (
+          <ul className="flex flex-col gap-9 w-full">
+            {savedPosts.map(({ post, savedRecordId }) => (
+              <li key={post.$id}>
+                <PostCard
+                  post={post}
+                  savedRecordId={savedRecordId}
+                  onUnsave={handleUnsave}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 };

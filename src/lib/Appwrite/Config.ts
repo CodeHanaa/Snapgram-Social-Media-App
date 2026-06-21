@@ -31,3 +31,4 @@ export class AppwriteConfig {
 }
 
 export const appwriteService = new AppwriteConfig();
+

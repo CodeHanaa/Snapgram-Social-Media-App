@@ -1,71 +1,73 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { type IUser } from "@/Types";
 import { INITIAL_USER } from "@/Context";
 import { getCurrentUser } from "@/lib/Appwrite/Api";
 import { AuthContext } from "./AuthContext";
 
-export function AuthProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [user, setUser] =
-    useState<IUser>(INITIAL_USER);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<IUser>(INITIAL_USER);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isAuthenticated, setIsAuthenticated] =
-    useState(false);
+  const checkAuthUser = useCallback(async (): Promise<boolean> => {
+    try {
+      const currentAccount = await getCurrentUser();
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+      if (currentAccount) {
+        setUser({
+          $id: currentAccount.$id,
+          accountId: currentAccount.accountId,
+          name: currentAccount.name,
+          username: currentAccount.username,
+          email: currentAccount.email,
+          imageUrl: currentAccount.imageUrl,
+          bio: currentAccount.bio,
+        });
+        setIsAuthenticated(true);
+        return true;
+      }
 
-  // ✅ CHECK AUTH USER
-  // ✅ CHECK AUTH USER (النسخة المعدلة والهادئة)
-  const checkAuthUser = async (): Promise<boolean> => {
-  setIsLoading(true);
-  try {
-    const currentAccount = await getCurrentUser();
-    if (currentAccount) {
-      // ... (تحديث الحالة كما هو)
-      setIsAuthenticated(true);
-      return true;
+      setUser(INITIAL_USER);
+      setIsAuthenticated(false);
+      return false;
+    } catch {
+      setUser(INITIAL_USER);
+      setIsAuthenticated(false);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-    // إذا لم يوجد حساب، يجب إجبار الحالة على "عدم التوثيق"
-    setIsAuthenticated(false);
-    setUser(INITIAL_USER); 
-    return false;
-  } catch (error) {
-    console.log(error)
-    setIsAuthenticated(false);
-    setUser(INITIAL_USER);
-    return false;
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  // ✅ INIT AUTH
-  useEffect(() => {
-    const init = async () => {
-      await checkAuthUser();
-    };
-
-    init();
   }, []);
 
-  const value = {
-    user,
-    setUser,
+  // ✅ الحل: نعمل async function منفصلة جوا الـ effect
+  useEffect(() => {
+    let isMounted = true;
 
-    isAuthenticated,
-    setIsAuthenticated,
+    const initAuth = async () => {
+      if (isMounted) {
+        await checkAuthUser();
+      }
+    };
 
-    isLoading,
+    initAuth();
 
-    checkAuthUser,
-  };
+    // cleanup لو الكومبوننت اتفك قبل ما الـ async تخلص
+    return () => {
+      isMounted = false;
+    };
+  }, [checkAuthUser]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        isAuthenticated,
+        setIsAuthenticated,
+        isLoading,
+        checkAuthUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

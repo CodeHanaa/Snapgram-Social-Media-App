@@ -1,52 +1,28 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 import type { IPost } from "@/Types";
 import { useUserContext } from "@/Context/useAuthContext";
 import { useDeletePost } from "@/lib/react-query/queries";
-import { appwriteService, appwriteConfig } from "@/lib/Appwrite/Config";
 import { multiFormatDateString } from "@/lib/utils";
-
 import PostStats from "@/components/shared/PostStats";
 
-type UserType = {
-  $id: string;
-  name: string;
-  imageUrl: string;
+type PostCardProps = {
+  post: IPost;
+  savedRecordId?: string;
+  onUnsave?: (postId: string) => void;
 };
 
-const PostCard = ({ post }: { post: IPost }) => {
+const PostCard = ({ post, savedRecordId, onUnsave }: PostCardProps) => {
   const { user } = useUserContext();
   const { mutate: deletePost } = useDeletePost();
 
-  const [creatorData, setCreatorData] = useState<UserType | null>(null);
-
-  const creatorId =
-    typeof post.creator === "string"
+  const creator =
+    typeof post.creator === "object" && post.creator !== null
       ? post.creator
-      : post.creator?.$id;
+      : null;
 
-  useEffect(() => {
-    const fetchCreator = async () => {
-      if (!creatorId) return;
-
-      try {
-        const res = await appwriteService.databases.getDocument(
-          appwriteConfig.databaseId,
-          appwriteConfig.userCollectionId,
-          creatorId
-        );
-
-        // تم التعديل هنا باستخدام unknown
-        setCreatorData(res as unknown as UserType);
-      } catch (error) {
-        console.log("creator fetch error:", error);
-      }
-    };
-
-    fetchCreator();
-  }, [creatorId]);
+  const creatorId = creator?.$id ?? (post.creator as string);
 
   const handleDelete = () => {
     deletePost(
@@ -61,19 +37,14 @@ const PostCard = ({ post }: { post: IPost }) => {
   return (
     <div className="post-card">
       <div className="flex-between">
-        <Link
-          to={`/profile/${creatorId}`}
-          className="flex items-center gap-3"
-        >
+        <Link to={`/profile/${creatorId}`} className="flex items-center gap-3">
           <img
-            src={creatorData?.imageUrl || "/assets/icons/profile-placeholder.svg"}
+            src={creator?.imageUrl || "/assets/icons/profile-placeholder.svg"}
             className="w-12 h-12 rounded-full"
             alt="user"
           />
           <div>
-            <p className="text-white">
-              {creatorData?.name || "Unknown User"}
-            </p>
+            <p className="text-white">{creator?.name || "Unknown User"}</p>
             <p className="text-gray-400 text-sm">
               {multiFormatDateString(post.$createdAt)}
             </p>
@@ -81,26 +52,35 @@ const PostCard = ({ post }: { post: IPost }) => {
         </Link>
 
         {user?.$id === creatorId && (
-          <button
-            onClick={handleDelete}
-            className="text-red-500"
-          >
-            Delete
-          </button>
+          <div className="flex gap-3">
+            <Link to={`/update-post/${post.$id}`}>
+              <img src="/assets/icons/edit.svg" alt="edit" className="w-5 h-5" />
+            </Link>
+            <button onClick={handleDelete}>
+              <img src="/assets/icons/delete.svg" alt="delete" className="w-5 h-5" />
+            </button>
+          </div>
         )}
       </div>
 
       <p className="mt-3 text-white">{post.caption}</p>
+
       <img
-        src={post.imageUrl}
-        className="w-full rounded-xl mt-3"
+        src={String(post.imageUrl)}
+        className="w-full rounded-xl mt-3 object-cover max-h-[400px]"
         alt="post"
+        onError={(e) => {
+          (e.target as HTMLImageElement).src =
+            "/assets/icons/profile-placeholder.svg";
+        }}
       />
 
       <div className="mt-4">
         <PostStats
           post={post}
           userId={user?.$id || ""}
+          savedRecordId={savedRecordId}
+          onUnsave={onUnsave}
         />
       </div>
     </div>
