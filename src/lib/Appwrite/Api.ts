@@ -65,8 +65,13 @@ export async function saveUserToDatabase(user: {
   );
 }
 
-// ✅ شيلنا الـ localStorage
 export async function signInAccount(user: { email: string; password: string }) {
+  try {
+    await appwriteService.account.deleteSession("current");
+  } catch {
+    // no active session
+  }
+
   await appwriteService.account.createEmailPasswordSession(
     user.email,
     user.password
@@ -74,16 +79,6 @@ export async function signInAccount(user: { email: string; password: string }) {
   return await appwriteService.account.get();
 }
 
-// ✅ شيلنا الـ localStorage
-export async function signOutAccount() {
-  try {
-    await appwriteService.account.deleteSession("current");
-  } catch {
-    // ignore
-  }
-}
-
-// ✅ شيلنا الـ localStorage check
 export async function getCurrentUser() {
   try {
     const currentAccount = await appwriteService.account.get();
