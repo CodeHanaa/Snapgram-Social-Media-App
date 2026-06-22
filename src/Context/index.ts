@@ -8,6 +8,8 @@ export const INITIAL_USER = {
   email: "",
   imageUrl: "",
   bio: "",
+  following: [],   
+  followers: [], 
 };
 
 export const INITIAL_STATE: IContextType = {

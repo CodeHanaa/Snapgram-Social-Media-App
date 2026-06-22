@@ -407,3 +407,50 @@ export async function getLikedPosts(userId: string) {
 
   return likedPosts;
 }
+
+/* ================= SEARCH BY TAG ================= */
+export async function getPostsByTag(tag: string) {
+  const posts = await appwriteService.databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    [Query.search("tags", tag), Query.orderDesc("$createdAt")]
+  );
+  return posts.documents;
+}
+
+/* ================= FOLLOW / UNFOLLOW ================= */
+export async function followUser(currentUserId: string, targetUserId: string, currentFollowing: string[], targetFollowers: string[]) {
+  // Add targetUser to current user's following list
+  await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    currentUserId,
+    { following: [...currentFollowing, targetUserId] }
+  );
+
+  // Add currentUser to target user's followers list
+  await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    targetUserId,
+    { followers: [...targetFollowers, currentUserId] }
+  );
+}
+
+export async function unfollowUser(currentUserId: string, targetUserId: string, currentFollowing: string[], targetFollowers: string[]) {
+  // Remove targetUser from current user's following list
+  await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    currentUserId,
+    { following: currentFollowing.filter((id) => id !== targetUserId) }
+  );
+
+  // Remove currentUser from target user's followers list
+  await appwriteService.databases.updateDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    targetUserId,
+    { followers: targetFollowers.filter((id) => id !== currentUserId) }
+  );
+}

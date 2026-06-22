@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import type { Models } from "appwrite";
+import { toast } from "sonner";
 
 import { useLikePost } from "@/lib/react-query/queries";
 import { checkIsLiked } from "@/lib/utils";
@@ -36,9 +37,12 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
   const [savedRecordId, setSavedRecordId] = useState(initialSavedId || "");
   const [comments, setComments] = useState<CommentType[]>([]);
   const [showComments, setShowComments] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copied, setCopied] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const shareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -60,6 +64,16 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
     }
   }, [showComments]);
 
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const handleLikePost = (e: React.MouseEvent) => {
     e.stopPropagation();
     const hasLiked = likes.includes(userId);
@@ -75,7 +89,6 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
     if (isSaved) {
       setIsSaved(false);
       await deleteSavePost(savedRecordId);
-// Remove the post from the list if on the Saved page
       onUnsave?.(post.$id);
     } else {
       setIsSaved(true);
@@ -87,7 +100,6 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || !userId) return;
-
     setIsSubmitting(true);
     try {
       const created = await createComment({
@@ -95,7 +107,6 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
         userId,
         content: newComment.trim(),
       });
-
       setComments((prev) => [
         ...prev,
         {
@@ -113,15 +124,49 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
     }
   };
 
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const postUrl = `${window.location.origin}/posts/${post.$id}`;
+    navigator.clipboard.writeText(postUrl).then(() => {
+      setCopied(true);
+      toast.success("Link copied to clipboard!");
+      setTimeout(() => {
+        setCopied(false);
+        setShowShareMenu(false);
+      }, 1500);
+    });
+  };
+
+  const handleShareWhatsapp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const postUrl = `${window.location.origin}/posts/${post.$id}`;
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent("Check this post 👇\n" + postUrl)}`,
+      "_blank"
+    );
+    setShowShareMenu(false);
+  };
+
+  const handleNativeShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const postUrl = `${window.location.origin}/posts/${post.$id}`;
+    if (navigator.share) {
+      await navigator.share({ title: "Check this post!", url: postUrl });
+      setShowShareMenu(false);
+    } else {
+      handleCopyLink(e);
+    }
+  };
+
   return (
     <>
       <div className="flex justify-between items-center z-20">
         <div className="flex gap-4 items-center">
+
+          {/* ❤️ Like */}
           <div className="flex gap-2 items-center">
             <img
-              src={checkIsLiked(likes, userId)
-                ? "/assets/icons/liked.svg"
-                : "/assets/icons/like.svg"}
+              src={checkIsLiked(likes, userId) ? "/assets/icons/liked.svg" : "/assets/icons/like.svg"}
               alt="like"
               width={20}
               height={20}
@@ -131,6 +176,7 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
             <p className="small-medium lg:base-medium">{likes.length}</p>
           </div>
 
+          {/* 💬 Comment */}
           <div className="flex gap-2 items-center">
             <img
               src="/assets/icons/chat.svg"
@@ -142,8 +188,89 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
             />
             <p className="small-medium lg:base-medium">{comments.length}</p>
           </div>
+
+          {/* 🔗 Share */}
+          <div className="relative" ref={shareRef}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowShareMenu((prev) => !prev);
+              }}
+              className="flex items-center text-light-3 hover:text-white transition"
+              title="Share"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+            </button>
+
+            {/* Share dropdown */}
+            {showShareMenu && (
+              <div className="absolute bottom-8 left-0 bg-dark-2 border border-dark-4 rounded-2xl p-2 flex flex-col gap-1 w-52 z-50 shadow-2xl">
+
+                {/* Copy Link */}
+                <button
+                  onClick={handleCopyLink}
+                  className="flex items-center gap-3 text-white text-sm px-3 py-2.5 hover:bg-dark-3 rounded-xl transition text-left"
+                >
+                  {copied ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#877eff" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/>
+                      <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/>
+                    </svg>
+                  )}
+                  {copied ? "Copied!" : "Copy link"}
+                </button>
+
+                {/* Share via WhatsApp */}
+                <button
+                  onClick={handleShareWhatsapp}
+                  className="flex items-center gap-3 text-white text-sm px-3 py-2.5 hover:bg-dark-3 rounded-xl transition text-left"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.855L0 24l6.335-1.505A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 01-5.006-1.371l-.36-.214-3.732.886.939-3.629-.235-.374A9.818 9.818 0 1112 21.818z"/>
+                  </svg>
+                  WhatsApp
+                </button>
+
+                {/* Native Share */}
+                <button
+                  onClick={handleNativeShare}
+                  className="flex items-center gap-3 text-white text-sm px-3 py-2.5 hover:bg-dark-3 rounded-xl transition text-left"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                    <polyline points="16 6 12 2 8 6"/>
+                    <line x1="12" y1="2" x2="12" y2="15"/>
+                  </svg>
+                  Share
+                </button>
+
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* 🔖 Save */}
         <div className="flex gap-2 items-center">
           <img
             src={isSaved ? "/assets/icons/saved.svg" : "/assets/icons/save.svg"}
@@ -156,6 +283,7 @@ const PostStats = ({ post, userId, savedRecordId: initialSavedId, onUnsave }: Po
         </div>
       </div>
 
+      {/* 💬 Comments Modal */}
       {showComments && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70"

@@ -9,33 +9,26 @@ const LeftSidebar = () => {
   const { mutate: signOut } = useSignOutAccount();
 
   const handleSignOut = () => {
-  signOut(undefined, {
-    onSuccess: () => navigate("/sign-in"),
-    onError: () => navigate("/sign-in"), 
-  });
-};
+    signOut(undefined, {
+      onSuccess: () => navigate("/sign-in"),
+      onError: () => navigate("/sign-in"),
+    });
+  };
 
   if (!user) return null;
 
   return (
     <nav className="leftsidebar">
       <div className="flex flex-col gap-6">
-        {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
-          <img
-            src="/assets/images/logo.svg"
-            alt="logo"
-            width={170}
-            height={36}
-          />
+          <img src="/assets/images/logo.svg" alt="logo" width={170} height={36} />
         </Link>
 
-        {/* Profile */}
         <Link to={`/profile/${user.$id}`} className="flex items-center gap-3">
           <img
             src={user.imageUrl || "/assets/icons/profile-placeholder.svg"}
             alt="Profile"
-            className="h-12 w-12 rounded-full"
+            className="h-12 w-12 rounded-full object-cover"
           />
           <div className="flex flex-col">
             <p className="body-bold">{user.name}</p>
@@ -43,7 +36,6 @@ const LeftSidebar = () => {
           </div>
         </Link>
 
-        {/* Links */}
         <ul className="flex flex-col gap-2">
           {sidebarLinks.map((link) => (
             <li key={link.label}>
@@ -51,10 +43,9 @@ const LeftSidebar = () => {
                 to={link.route}
                 className={({ isActive }) =>
                   `leftsidebar-link group flex gap-3 items-center px-4 py-2 rounded-lg transition
-                  ${
-                    isActive
-                      ? "bg-primary-500 text-white"
-                      : "text-light-1 hover:bg-primary-500 hover:text-white"
+                  ${isActive
+                    ? "bg-primary-500 text-white"
+                    : "text-light-1 hover:bg-primary-500 hover:text-white"
                   }`
                 }
               >
@@ -73,13 +64,9 @@ const LeftSidebar = () => {
       {/* Logout */}
       <button
         onClick={handleSignOut}
-        className="flex gap-3 items-center px-4 py-2 mt-4 rounded-lg hover:bg-primary-500 transition group"
+        className="flex gap-3 items-center px-4 py-2 rounded-lg hover:bg-primary-500 transition group"
       >
-        <img
-          src="/assets/icons/logout.svg"
-          alt="logout"
-          className="w-5 h-5 transition group-hover:invert"
-        />
+        <img src="/assets/icons/logout.svg" alt="logout" className="w-5 h-5 transition group-hover:invert" />
         <p className="small-medium lg:base-medium">Logout</p>
       </button>
     </nav>

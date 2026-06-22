@@ -10,6 +10,8 @@ type UserType = Models.Document & {
   username: string;
   imageUrl: string;
   bio?: string;
+  followers?: string[];
+  following?: string[];
 };
 
 const AllUsers = () => {
@@ -17,11 +19,13 @@ const AllUsers = () => {
   const [users, setUsers] = useState<UserType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchValue, setSearchValue] = useState("");
+  const [filter, setFilter] = useState<"all" | "following">("all");
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const data = await getAllUsers();
+        // Exclude current user from the list
         const filtered = (data as unknown as UserType[]).filter(
           (u) => u.$id !== currentUser.$id
         );
@@ -35,7 +39,8 @@ const AllUsers = () => {
     fetchUsers();
   }, [currentUser.$id]);
 
-  const filteredUsers = searchValue
+  // Filter by search value
+  const searchFiltered = searchValue
     ? users.filter(
         (u) =>
           u.name.toLowerCase().includes(searchValue.toLowerCase()) ||
@@ -43,10 +48,18 @@ const AllUsers = () => {
       )
     : users;
 
+  // Filter by following tab
+  const filteredUsers =
+    filter === "following"
+      ? searchFiltered.filter((u) =>
+          (currentUser.following || []).includes(u.$id)
+        )
+      : searchFiltered;
+
   if (isLoading) {
     return (
       <div className="flex flex-1 items-center justify-center">
-        <Loader /> 
+        <Loader />
       </div>
     );
   }
@@ -78,6 +91,30 @@ const AllUsers = () => {
           )}
         </div>
 
+        {/* TABS: All / Following */}
+        <div className="flex gap-4 border-b border-dark-4">
+          <button
+            onClick={() => setFilter("all")}
+            className={`pb-3 text-sm font-medium transition border-b-2 ${
+              filter === "all"
+                ? "border-purple-500 text-white"
+                : "border-transparent text-light-3 hover:text-white"
+            }`}
+          >
+            All People
+          </button>
+          <button
+            onClick={() => setFilter("following")}
+            className={`pb-3 text-sm font-medium transition border-b-2 ${
+              filter === "following"
+                ? "border-purple-500 text-white"
+                : "border-transparent text-light-3 hover:text-white"
+            }`}
+          >
+            Following ({(currentUser.following || []).length})
+          </button>
+        </div>
+
         {/* COUNT */}
         <p className="text-light-3 text-sm">
           {filteredUsers.length} {filteredUsers.length === 1 ? "person" : "people"}
@@ -87,13 +124,17 @@ const AllUsers = () => {
         {filteredUsers.length === 0 ? (
           <div className="flex flex-col items-center mt-10 gap-3">
             <img src="/assets/icons/people.svg" alt="no users" className="w-16 h-16 opacity-20" />
-            <p className="text-light-4 text-center">No users found</p>
+            <p className="text-light-4 text-center">
+              {filter === "following"
+                ? "You are not following anyone yet"
+                : "No users found"}
+            </p>
           </div>
         ) : (
           <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredUsers.map((user: UserType) => (
               <li key={user.$id}>
-                <UserCard user={user} /> 
+                <UserCard user={user} />
               </li>
             ))}
           </ul>
