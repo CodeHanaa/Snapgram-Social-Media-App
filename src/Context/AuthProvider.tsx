@@ -22,6 +22,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           email: currentAccount.email,
           imageUrl: currentAccount.imageUrl,
           bio: currentAccount.bio,
+          following: currentAccount.following || [],   
+          followers: currentAccount.followers || [], 
         });
         setIsAuthenticated(true);
         return true;

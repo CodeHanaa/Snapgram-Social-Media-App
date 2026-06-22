@@ -26,7 +26,7 @@ const UserCard = ({ user }: UserCardProps) => {
   );
 
   const handleFollow = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigating to profile on button click
+    e.preventDefault();
 
     if (isFollowing) {
       setIsFollowing(false);
@@ -65,7 +65,6 @@ const UserCard = ({ user }: UserCardProps) => {
         )}
       </div>
 
-      {/* Follow button — hidden on own profile */}
       {!isOwnProfile && (
         <button
           onClick={handleFollow}

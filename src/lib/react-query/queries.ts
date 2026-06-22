@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { INewPost, IUpdatePost } from "@/Types";
+import { useUserContext } from "@/Context/useAuthContext"; // ✅ زود الـ import ده
 
 import {
   getRecentPosts,
@@ -116,9 +117,11 @@ export const useGetPostsByTag = (tag: string) => {
   });
 };
 
-/* ================= FOLLOW / UNFOLLOW ================= */
+/* ================= FOLLOW ================= */
 export const useFollowUser = () => {
   const qc = useQueryClient();
+  const { setUser } = useUserContext(); // ✅
+
   return useMutation({
     mutationFn: ({
       currentUserId,
@@ -131,15 +134,23 @@ export const useFollowUser = () => {
       currentFollowing: string[];
       targetFollowers: string[];
     }) => followUser(currentUserId, targetUserId, currentFollowing, targetFollowers),
-    onSuccess: () => {
+
+    onSuccess: (_, variables) => {
+      setUser((prev) => ({
+        ...prev,
+        following: [...(prev.following || []), variables.targetUserId],
+      }));
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
     },
   });
 };
 
+/* ================= UNFOLLOW ================= */
 export const useUnfollowUser = () => {
   const qc = useQueryClient();
+  const { setUser } = useUserContext(); // ✅
+
   return useMutation({
     mutationFn: ({
       currentUserId,
@@ -152,7 +163,14 @@ export const useUnfollowUser = () => {
       currentFollowing: string[];
       targetFollowers: string[];
     }) => unfollowUser(currentUserId, targetUserId, currentFollowing, targetFollowers),
-    onSuccess: () => {
+
+    onSuccess: (_, variables) => {
+      setUser((prev) => ({
+        ...prev,
+        following: (prev.following || []).filter(
+          (id) => id !== variables.targetUserId
+        ),
+      }));
       qc.invalidateQueries({ queryKey: ["users"] });
       qc.invalidateQueries({ queryKey: ["profile"] });
     },
