@@ -79,6 +79,15 @@ export async function signInAccount(user: { email: string; password: string }) {
   return await appwriteService.account.get();
 }
 
+// ✅ موجودة دلوقتي
+export async function signOutAccount() {
+  try {
+    await appwriteService.account.deleteSession("current");
+  } catch {
+    // ignore
+  }
+}
+
 export async function getCurrentUser() {
   try {
     const currentAccount = await appwriteService.account.get();
@@ -385,7 +394,8 @@ export async function getLikedPosts(userId: string) {
     const likes = post.likes;
     if (!Array.isArray(likes) || likes.length === 0) return false;
     if (typeof likes[0] === "string") return (likes as string[]).includes(userId);
-    if (typeof likes[0] === "object") return (likes as { $id: string }[]).some((u) => u.$id === userId);
+    if (typeof likes[0] === "object")
+      return (likes as { $id: string }[]).some((u) => u.$id === userId);
     return false;
   });
 
