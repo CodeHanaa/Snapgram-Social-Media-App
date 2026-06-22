@@ -4,7 +4,7 @@ import type { INewUser } from "@/Types";
 import { signUpAccount, signInAccount } from "@/lib/Appwrite/Api";
 
 
-// 🟢 CREATE USER (DATABASE)
+//  CREATE USER (DATABASE)
 export const useCreateUserAccount = () => {
   return useMutation({
     mutationFn: (userData: INewUser) => createUserAccount(userData),
@@ -12,7 +12,7 @@ export const useCreateUserAccount = () => {
 };
 
 
-// 🔵 SIGN UP (AUTH)
+//  SIGN UP (AUTH)
 export const useSignUpAccount = () => {
   return useMutation({
     mutationFn: (user: {
@@ -25,7 +25,7 @@ export const useSignUpAccount = () => {
 };
 
 
-// 🔵 SIGN IN
+//  SIGN IN
 export const useSignInAccount = () => {
   return useMutation({
     mutationFn: (user: {
@@ -35,7 +35,7 @@ export const useSignInAccount = () => {
   });
 };
 
-// 🔵 SIGN OUT
+//  SIGN OUT
 export const useSignOutAccount = () => {
   return useMutation({
     mutationFn: () => signOutAccount(),
