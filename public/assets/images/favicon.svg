@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="50" fill="#877EFF"/>
+  <!-- Camera body -->
+  <rect x="20" y="32" width="60" height="42" rx="8" ry="8" fill="white"/>
+  <!-- Lens outer -->
+  <circle cx="50" cy="53" r="14" fill="#877EFF"/>
+  <!-- Lens inner -->
+  <circle cx="50" cy="53" r="9" fill="white"/>
+  <!-- Lens center -->
+  <circle cx="50" cy="53" r="5" fill="#877EFF"/>
+  <!-- Flash bump -->
+  <rect x="36" y="26" width="16" height="10" rx="4" ry="4" fill="white"/>
+  <!-- Flash dot -->
+  <circle cx="72" cy="38" r="3" fill="#877EFF"/>
+</svg>
