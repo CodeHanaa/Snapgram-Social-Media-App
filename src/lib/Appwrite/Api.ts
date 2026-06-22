@@ -65,30 +65,27 @@ export async function saveUserToDatabase(user: {
   );
 }
 
+// ✅ شيلنا الـ localStorage
 export async function signInAccount(user: { email: string; password: string }) {
   await appwriteService.account.createEmailPasswordSession(
     user.email,
     user.password
   );
-  const account = await appwriteService.account.get();
-  localStorage.setItem("isLoggedIn", "true");
-  return account;
+  return await appwriteService.account.get();
 }
 
+// ✅ شيلنا الـ localStorage
 export async function signOutAccount() {
   try {
     await appwriteService.account.deleteSession("current");
   } catch {
-    //delete local state even if delete
-  } finally {
-    localStorage.removeItem("isLoggedIn");
+    // ignore
   }
 }
 
+// ✅ شيلنا الـ localStorage check
 export async function getCurrentUser() {
   try {
-    if (!localStorage.getItem("isLoggedIn")) return null;
-
     const currentAccount = await appwriteService.account.get();
     if (!currentAccount) return null;
 
@@ -101,7 +98,6 @@ export async function getCurrentUser() {
     if (currentUser.documents.length === 0) return null;
     return currentUser.documents[0];
   } catch {
-    localStorage.removeItem("isLoggedIn");
     return null;
   }
 }
@@ -191,7 +187,6 @@ export async function getPostById(postId: string): Promise<IPost | null> {
 
     const creatorRaw = postDoc.creator as unknown;
 
-    // لو رجع كـ { documents: [...] }
     if (
       creatorRaw &&
       typeof creatorRaw === "object" &&
@@ -205,7 +200,6 @@ export async function getPostById(postId: string): Promise<IPost | null> {
       };
     }
 
-    // لو رجع كـ string ID
     if (typeof creatorRaw === "string") {
       const userDoc = await appwriteService.databases.getDocument(
         appwriteConfig.databaseId,
@@ -392,11 +386,6 @@ export async function getLikedPosts(userId: string) {
     [Query.orderDesc("$createdAt")]
   );
 
-  posts.documents.forEach((post, i) => {
-    console.log(`Post ${i}:`, post.$id);
-    console.log(`Likes:`, JSON.stringify(post.likes));
-  });
-
   const likedPosts = posts.documents.filter((post) => {
     const likes = post.likes;
     if (!Array.isArray(likes) || likes.length === 0) return false;
@@ -419,8 +408,12 @@ export async function getPostsByTag(tag: string) {
 }
 
 /* ================= FOLLOW / UNFOLLOW ================= */
-export async function followUser(currentUserId: string, targetUserId: string, currentFollowing: string[], targetFollowers: string[]) {
-  // Add targetUser to current user's following list
+export async function followUser(
+  currentUserId: string,
+  targetUserId: string,
+  currentFollowing: string[],
+  targetFollowers: string[]
+) {
   await appwriteService.databases.updateDocument(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
@@ -428,7 +421,6 @@ export async function followUser(currentUserId: string, targetUserId: string, cu
     { following: [...currentFollowing, targetUserId] }
   );
 
-  // Add currentUser to target user's followers list
   await appwriteService.databases.updateDocument(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
@@ -437,8 +429,12 @@ export async function followUser(currentUserId: string, targetUserId: string, cu
   );
 }
 
-export async function unfollowUser(currentUserId: string, targetUserId: string, currentFollowing: string[], targetFollowers: string[]) {
-  // Remove targetUser from current user's following list
+export async function unfollowUser(
+  currentUserId: string,
+  targetUserId: string,
+  currentFollowing: string[],
+  targetFollowers: string[]
+) {
   await appwriteService.databases.updateDocument(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
@@ -446,7 +442,6 @@ export async function unfollowUser(currentUserId: string, targetUserId: string, 
     { following: currentFollowing.filter((id) => id !== targetUserId) }
   );
 
-  // Remove currentUser from target user's followers list
   await appwriteService.databases.updateDocument(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
