@@ -1,15 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
-import {
-  Link,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
-
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Form,
@@ -19,131 +13,70 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
 import { Input } from "@/components/ui/input";
-
 import { Button } from "@/components/ui/button";
-
 import { signinSchema } from "@/lib/Validation";
-
 import { useSignInAccount } from "@/lib/react-query/QueriesAndMutation";
-
 import { useUserContext } from "@/Context/useAuthContext";
 
 const SigninForm = () => {
   const navigate = useNavigate();
-
   const location = useLocation();
+  const { checkAuthUser } = useUserContext();
+  const [showPassword, setShowPassword] = useState(false);
 
-  const { checkAuthUser } =
-    useUserContext();
+  const { mutateAsync: signInAccount, isPending: isSigningIn } = useSignInAccount();
 
-  const {
-    mutateAsync: signInAccount,
-    isPending: isSigningIn,
-  } = useSignInAccount();
-
-  const form = useForm<
-    z.infer<typeof signinSchema>
-  >({
+  const form = useForm<z.infer<typeof signinSchema>>({
     resolver: zodResolver(signinSchema),
-
     defaultValues: {
       email: location.state?.email || "",
-      password:
-        location.state?.password || "",
+      password: location.state?.password || "",
     },
   });
 
   useEffect(() => {
     if (location.state) {
-      window.history.replaceState(
-        {},
-        document.title
-      );
+      window.history.replaceState({}, document.title);
     }
   }, [location]);
 
-  const onSubmit = async (
-    values: z.infer<typeof signinSchema>
-  ) => {
+  const onSubmit = async (values: z.infer<typeof signinSchema>) => {
     try {
-      console.log("Starting login...");
+      const session = await signInAccount({
+        email: values.email,
+        password: values.password,
+      });
 
-      //  تسجيل الدخول
-      const session =
-        await signInAccount({
-          email: values.email,
-          password: values.password,
-        });
+      if (!session) throw new Error("Failed to create session");
 
-      console.log("Session:", session);
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-      if (!session) {
-        throw new Error(
-          "Failed to create session"
-        );
-      }
-
-      //  انتظار بسيط لتثبيت الـ session
-      await new Promise((resolve) =>
-        setTimeout(resolve, 500)
-      );
-
-      //  التحقق من المستخدم
-      const isLoggedIn =
-        await checkAuthUser();
-
-      console.log(
-        "Is Logged In:",
-        isLoggedIn
-      );
+      const isLoggedIn = await checkAuthUser();
 
       if (isLoggedIn) {
         form.reset();
-
         toast.success("Welcome back!");
-
         navigate("/");
       } else {
-        toast.error(
-          "Authentication failed"
-        );
+        toast.error("Authentication failed");
       }
     } catch (error) {
-      console.error(
-        "Login Error:",
-        error
-      );
-
+      console.error("Login Error:", error);
       toast.error("Failed to log in");
     }
   };
 
   return (
     <div className="flex flex-col justify-center items-center w-full max-w-[430px] text-white">
-      {/* LOGO */}
-      <img
-        src="/assets/images/logo.svg"
-        alt="logo"
-        className="h-12 mb-5"
-      />
+      <img src="/assets/images/logo.svg" alt="logo" className="h-12 mb-5" />
 
-      {/* TITLE */}
-      <h2 className="text-3xl font-bold pt-5">
-        Log in to your account
-      </h2>
+      <h2 className="text-3xl font-bold pt-5">Log in to your account</h2>
+      <p className="text-gray-400 mt-2">Welcome back!</p>
 
-      <p className="text-gray-400 mt-2">
-        Welcome back!
-      </p>
-
-      {/* FORM */}
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(
-            onSubmit
-          )}
+          onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-5 w-full mt-8"
         >
           {/* EMAIL */}
@@ -152,10 +85,7 @@ const SigninForm = () => {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Email
-                </FormLabel>
-
+                <FormLabel>Email</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -163,7 +93,6 @@ const SigninForm = () => {
                     {...field}
                   />
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
@@ -175,41 +104,50 @@ const SigninForm = () => {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>
-                  Password
-                </FormLabel>
-
+                <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    className="bg-[#1F1F22] border-none text-white"
-                    {...field}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      className="bg-[#1F1F22] border-none text-white pr-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition"
+                    >
+                      {showPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                          <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </FormControl>
-
                 <FormMessage />
               </FormItem>
             )}
           />
 
-          {/* BUTTON */}
           <Button
             type="submit"
             className="bg-purple-600 hover:bg-purple-700 text-white w-full"
             disabled={isSigningIn}
           >
-            {isSigningIn
-              ? "Loading..."
-              : "Log in"}
+            {isSigningIn ? "Loading..." : "Log in"}
           </Button>
 
-          {/* SIGN UP */}
           <p className="text-center mt-2 text-gray-400">
             Don't have an account?{" "}
-            <Link
-              to="/sign-up"
-              className="text-purple-500 font-semibold underline"
-            >
+            <Link to="/sign-up" className="text-purple-500 font-semibold underline">
               Sign up
             </Link>
           </p>
