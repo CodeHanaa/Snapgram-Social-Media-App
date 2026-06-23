@@ -79,7 +79,7 @@ export async function signInAccount(user: { email: string; password: string }) {
   return await appwriteService.account.get();
 }
 
-// ✅ موجودة دلوقتي
+
 export async function signOutAccount() {
   try {
     await appwriteService.account.deleteSession("current");
