@@ -66,17 +66,13 @@ export async function saveUserToDatabase(user: {
 }
 
 export async function signInAccount(user: { email: string; password: string }) {
-  try {
-    await appwriteService.account.deleteSession("current");
-  } catch {
-    // no active session
-  }
-
   await appwriteService.account.createEmailPasswordSession(
     user.email,
     user.password
   );
-  return await appwriteService.account.get();
+  const account = await appwriteService.account.get();
+  localStorage.setItem("isLoggedIn", "true");
+  return account;
 }
 
 

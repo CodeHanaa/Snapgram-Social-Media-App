@@ -19,6 +19,10 @@ import { signinSchema } from "@/lib/Validation";
 import { useSignInAccount } from "@/lib/react-query/QueriesAndMutation";
 import { useUserContext } from "@/Context/useAuthContext";
 
+// ✅ بيانات الـ demo account
+const DEMO_EMAIL = "demo@snapgram.com";
+const DEMO_PASSWORD = "demo123456";
+
 const SigninForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,6 +69,13 @@ const SigninForm = () => {
       console.error("Login Error:", error);
       toast.error("Failed to log in");
     }
+  };
+
+  // ✅ دالة الـ demo login
+  const handleDemoLogin = () => {
+    form.setValue("email", DEMO_EMAIL);
+    form.setValue("password", DEMO_PASSWORD);
+    form.handleSubmit(onSubmit)();
   };
 
   return (
@@ -144,6 +155,22 @@ const SigninForm = () => {
           >
             {isSigningIn ? "Loading..." : "Log in"}
           </Button>
+
+          {/* ✅ Demo Account Button */}
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 h-px bg-dark-4" />
+            <span className="text-gray-500 text-sm">or</span>
+            <div className="flex-1 h-px bg-dark-4" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={isSigningIn}
+            className="w-full py-2.5 rounded-lg border border-purple-500 text-purple-400 hover:bg-purple-500/10 transition text-sm font-medium disabled:opacity-50"
+          >
+             Try Demo Account
+          </button>
 
           <p className="text-center mt-2 text-gray-400">
             Don't have an account?{" "}
