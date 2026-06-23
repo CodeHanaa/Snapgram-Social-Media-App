@@ -156,7 +156,7 @@ const SigninForm = () => {
             {isSigningIn ? "Loading..." : "Log in"}
           </Button>
 
-          {/* ✅ Demo Account Button */}
+          {/*  Demo Account Button */}
           <div className="relative flex items-center gap-3">
             <div className="flex-1 h-px bg-dark-4" />
             <span className="text-gray-500 text-sm">or</span>
