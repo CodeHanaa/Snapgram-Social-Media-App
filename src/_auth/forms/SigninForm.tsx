@@ -79,7 +79,7 @@ const SigninForm = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-full max-w-[430px] text-white">
+    <div className="flex flex-col justify-center items-center w-full max-w-107.5 text-white">
       <img src="/assets/images/logo.svg" alt="logo" className="h-12 mb-5" />
 
       <h2 className="text-3xl font-bold pt-5">Log in to your account</h2>
