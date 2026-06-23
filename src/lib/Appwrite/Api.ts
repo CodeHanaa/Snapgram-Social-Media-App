@@ -66,6 +66,13 @@ export async function saveUserToDatabase(user: {
 }
 
 export async function signInAccount(user: { email: string; password: string }) {
+  // Delete existing session if any
+  try {
+    await appwriteService.account.deleteSession("current");
+  } catch {
+    // No active session, continue
+  }
+
   await appwriteService.account.createEmailPasswordSession(
     user.email,
     user.password
